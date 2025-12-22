@@ -29,5 +29,6 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_DEPLOY_TOKEN }}
           channelId: live
+          projectId: bloom-connect-258b0
         env:
           FIREBASE_PROJECT_ID: bloom-connect-258b0
