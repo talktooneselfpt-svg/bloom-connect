@@ -6,6 +6,8 @@ export interface Staff {
   organizationId: string;
   /** Firebase Authentication の UID */
   uid: string;
+  /** 個人番号（ログイン用・職員番号） */
+  staffNumber: string;
   /** 氏名（漢字） */
   nameKanji: string;
   /** 氏名（ひらがな） */
