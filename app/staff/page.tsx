@@ -1,16 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { getActiveStaff, retireStaff } from '@/lib/firestore/staff';
-import { Staff } from '@/types/staff';
+import { getStaffByOrganization, retireStaff } from '@/lib/firestore/staff';
+import { Staff, ROLES } from '@/types/staff';
 
 export default function StaffListPage() {
   const router = useRouter();
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showInactive, setShowInactive] = useState(false);
+
+  // フィルター・検索用のstate
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('active');
+  const [filterRole, setFilterRole] = useState<string>('all');
 
   useEffect(() => {
     loadStaffList();
@@ -21,7 +25,7 @@ export default function StaffListPage() {
       setLoading(true);
       // TODO: 実際の組織IDに置き換え
       const organizationId = 'temp-org-id';
-      const data = await getActiveStaff(organizationId);
+      const data = await getStaffByOrganization(organizationId);
       setStaffList(data);
     } catch (err) {
       setError('職員一覧の取得に失敗しました');
@@ -46,6 +50,32 @@ export default function StaffListPage() {
       console.error(err);
     }
   };
+
+  // 検索・フィルタリング処理
+  const filteredStaff = useMemo(() => {
+    return staffList.filter(staff => {
+      // 在職状態フィルター
+      if (filterActive === 'active' && !staff.isActive) return false;
+      if (filterActive === 'inactive' && staff.isActive) return false;
+
+      // ロールフィルター
+      if (filterRole !== 'all' && staff.role !== filterRole) return false;
+
+      // 検索フィルター（名前、職種、役職で検索）
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const matchName = staff.nameKanji.toLowerCase().includes(term) ||
+                          staff.nameKana.toLowerCase().includes(term);
+        const matchJob = staff.jobType.toLowerCase().includes(term);
+        const matchPosition = staff.position.toLowerCase().includes(term);
+        const matchEmail = staff.email.toLowerCase().includes(term);
+
+        if (!matchName && !matchJob && !matchPosition && !matchEmail) return false;
+      }
+
+      return true;
+    });
+  }, [staffList, searchTerm, filterActive, filterRole]);
 
   if (loading) {
     return (
@@ -85,17 +115,57 @@ export default function StaffListPage() {
             </div>
           </div>
 
-          {/* フィルター */}
-          <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
-            <label className="flex items-center">
+          {/* 検索・フィルター */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 space-y-4">
+            {/* 検索バー */}
+            <div>
               <input
-                type="checkbox"
-                checked={showInactive}
-                onChange={(e) => setShowInactive(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                type="text"
+                placeholder="名前、職種、役職、メールアドレスで検索..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               />
-              <span className="ml-2 text-sm text-gray-700">退職者を表示</span>
-            </label>
+            </div>
+
+            {/* フィルター */}
+            <div className="flex flex-wrap gap-4">
+              {/* 在職状態フィルター */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">在職状態:</label>
+                <select
+                  value={filterActive}
+                  onChange={(e) => setFilterActive(e.target.value as 'all' | 'active' | 'inactive')}
+                  className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black text-sm"
+                >
+                  <option value="all">すべて</option>
+                  <option value="active">在職中</option>
+                  <option value="inactive">退職済み</option>
+                </select>
+              </div>
+
+              {/* ロールフィルター */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">権限:</label>
+                <select
+                  value={filterRole}
+                  onChange={(e) => setFilterRole(e.target.value)}
+                  className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black text-sm"
+                >
+                  <option value="all">すべて</option>
+                  {ROLES.map(role => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 結果数表示 */}
+              <div className="flex items-center ml-auto">
+                <span className="text-sm text-gray-600">
+                  {filteredStaff.length}件 / {staffList.length}件
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* テーブル */}
@@ -130,43 +200,52 @@ export default function StaffListPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {staffList
-                  .filter(staff => showInactive || staff.isActive)
-                  .map((staff) => (
-                    <tr key={staff.uid} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{staff.nameKanji}</div>
-                        <div className="text-sm text-gray-500">{staff.nameKana}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {staff.jobType}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {staff.position}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {staff.role}
+                {filteredStaff.map((staff) => (
+                  <tr
+                    key={staff.uid}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => router.push(`/staff/${staff.uid}`)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{staff.nameKanji}</div>
+                      <div className="text-sm text-gray-500">{staff.nameKana}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {staff.jobType}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {staff.position}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {staff.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {staff.phoneCompany}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {staff.email}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {staff.isActive ? (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          在職中
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {staff.phoneCompany}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {staff.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {staff.isActive ? (
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            在職中
-                          </span>
-                        ) : (
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                            退職
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      ) : (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                          退職
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => router.push(`/staff/${staff.uid}/edit`)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          編集
+                        </button>
                         {staff.isActive && (
                           <button
                             onClick={() => handleRetire(staff.uid)}
@@ -175,22 +254,29 @@ export default function StaffListPage() {
                             退職処理
                           </button>
                         )}
-                      </td>
-                    </tr>
-                  ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
 
-          {staffList.length === 0 && (
+          {filteredStaff.length === 0 && (
             <div className="px-6 py-12 text-center">
-              <p className="text-gray-500">職員が登録されていません</p>
-              <button
-                onClick={() => router.push('/staff/new')}
-                className="mt-4 text-blue-600 hover:text-blue-800"
-              >
-                最初の職員を登録する
-              </button>
+              <p className="text-gray-500">
+                {searchTerm || filterRole !== 'all' || filterActive !== 'active'
+                  ? '検索条件に一致する職員が見つかりません'
+                  : '職員が登録されていません'}
+              </p>
+              {!searchTerm && filterRole === 'all' && filterActive === 'active' && (
+                <button
+                  onClick={() => router.push('/staff/new')}
+                  className="mt-4 text-blue-600 hover:text-blue-800"
+                >
+                  最初の職員を登録する
+                </button>
+              )}
             </div>
           )}
         </div>

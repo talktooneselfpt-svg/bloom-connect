@@ -1,13 +1,17 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { createStaffWithAuth } from '@/lib/auth/staff';
-import { JOB_TYPES, POSITIONS, ROLES, EMPLOYMENT_TYPES } from '@/types/staff';
+import { useState, useEffect, FormEvent } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { getStaff, updateStaff } from '@/lib/firestore/staff';
+import { JOB_TYPES, POSITIONS, ROLES, EMPLOYMENT_TYPES, Staff } from '@/types/staff';
 
-export default function NewStaffPage() {
+export default function EditStaffPage() {
   const router = useRouter();
+  const params = useParams();
+  const staffId = params.id as string;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -22,12 +26,48 @@ export default function NewStaffPage() {
     phoneCompany: '',
     phonePersonal: '',
     email: '',
-    password: '',
     hireDate: '',
     licenseNumber: '',
     emergencyContact: '',
     memo: '',
   });
+
+  useEffect(() => {
+    loadStaff();
+  }, [staffId]);
+
+  const loadStaff = async () => {
+    try {
+      setLoading(true);
+      const data = await getStaff(staffId);
+      if (!data) {
+        setError('職員が見つかりません');
+        return;
+      }
+
+      setFormData({
+        nameKanji: data.nameKanji,
+        nameKana: data.nameKana,
+        jobType: data.jobType,
+        position: data.position,
+        role: data.role,
+        department: data.department || '',
+        employmentType: data.employmentType || '',
+        phoneCompany: data.phoneCompany,
+        phonePersonal: data.phonePersonal || '',
+        email: data.email,
+        hireDate: data.hireDate || '',
+        licenseNumber: data.licenseNumber || '',
+        emergencyContact: data.emergencyContact || '',
+        memo: data.memo || '',
+      });
+    } catch (err) {
+      setError('職員情報の取得に失敗しました');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -61,9 +101,6 @@ export default function NewStaffPage() {
       if (!formData.email) {
         throw new Error('メールアドレスは必須項目です');
       }
-      if (!formData.password) {
-        throw new Error('パスワードは必須項目です');
-      }
 
       // メールアドレスの形式チェック
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -71,18 +108,10 @@ export default function NewStaffPage() {
         throw new Error('有効なメールアドレスを入力してください');
       }
 
-      // パスワードの長さチェック
-      if (formData.password.length < 6) {
-        throw new Error('パスワードは6文字以上で設定してください');
-      }
-
-      // 仮のデータ（実際にはログインユーザー情報を使用）
       const currentUserId = 'temp-user-id'; // TODO: 実際のユーザーIDに置き換え
-      const organizationId = 'temp-org-id'; // TODO: 実際の組織IDに置き換え
 
       // 任意フィールドの処理（空文字列の場合はプロパティ自体を含めない）
-      const staffData: any = {
-        organizationId,
+      const updateData: any = {
         nameKanji: formData.nameKanji,
         nameKana: formData.nameKana,
         jobType: formData.jobType,
@@ -90,49 +119,57 @@ export default function NewStaffPage() {
         role: formData.role,
         phoneCompany: formData.phoneCompany,
         email: formData.email,
-        isActive: true,
-        createdBy: currentUserId,
         updatedBy: currentUserId,
-      }
+      };
 
       // 任意フィールドが入力されている場合のみ追加
       if (formData.department?.trim()) {
-        staffData.department = formData.department.trim()
+        updateData.department = formData.department.trim();
       }
       if (formData.employmentType?.trim()) {
-        staffData.employmentType = formData.employmentType.trim()
+        updateData.employmentType = formData.employmentType.trim();
       }
       if (formData.phonePersonal?.trim()) {
-        staffData.phonePersonal = formData.phonePersonal.trim()
+        updateData.phonePersonal = formData.phonePersonal.trim();
       }
       if (formData.hireDate?.trim()) {
-        staffData.hireDate = formData.hireDate.trim()
+        updateData.hireDate = formData.hireDate.trim();
       }
       if (formData.licenseNumber?.trim()) {
-        staffData.licenseNumber = formData.licenseNumber.trim()
+        updateData.licenseNumber = formData.licenseNumber.trim();
       }
       if (formData.emergencyContact?.trim()) {
-        staffData.emergencyContact = formData.emergencyContact.trim()
+        updateData.emergencyContact = formData.emergencyContact.trim();
       }
       if (formData.memo?.trim()) {
-        staffData.memo = formData.memo.trim()
+        updateData.memo = formData.memo.trim();
       }
 
-      // Firebase Auth でユーザーを作成し、Firestore に保存
-      await createStaffWithAuth(formData.email, formData.password, staffData);
+      await updateStaff(staffId, updateData);
 
       setSuccess(true);
 
-      // 3秒後に一覧ページにリダイレクト（一覧ページは別途作成が必要）
+      // 2秒後に詳細ページにリダイレクト
       setTimeout(() => {
-        router.push('/staff');
-      }, 3000);
+        router.push(`/staff/${staffId}`);
+      }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '職員の登録に失敗しました');
+      setError(err instanceof Error ? err.message : '職員情報の更新に失敗しました');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -153,8 +190,8 @@ export default function NewStaffPage() {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">登録完了</h2>
-          <p className="text-gray-600">職員の登録が完了しました。</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">更新完了</h2>
+          <p className="text-gray-600">職員情報の更新が完了しました。</p>
         </div>
       </div>
     );
@@ -164,7 +201,7 @@ export default function NewStaffPage() {
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">職員登録</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">職員情報編集</h1>
 
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -360,27 +397,6 @@ export default function NewStaffPage() {
               />
             </div>
 
-            {/* パスワード */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                パスワード <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                minLength={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                placeholder="6文字以上"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                ログイン用のパスワード（6文字以上）
-              </p>
-            </div>
-
             {/* 入社日 */}
             <div>
               <label htmlFor="hireDate" className="block text-sm font-medium text-gray-700 mb-1">
@@ -451,11 +467,11 @@ export default function NewStaffPage() {
                 disabled={isSubmitting}
                 className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isSubmitting ? '登録中...' : '登録する'}
+                {isSubmitting ? '更新中...' : '更新する'}
               </button>
               <button
                 type="button"
-                onClick={() => router.back()}
+                onClick={() => router.push(`/staff/${staffId}`)}
                 className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               >
                 キャンセル
