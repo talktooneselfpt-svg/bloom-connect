@@ -75,26 +75,31 @@ export default function NewStaffPage() {
       const currentUserId = 'temp-user-id'; // TODO: 実際のユーザーIDに置き換え
       const organizationId = 'temp-org-id'; // TODO: 実際の組織IDに置き換え
 
+      // 任意フィールドの処理（空文字列の場合はプロパティ自体を含めない）
+      const staffData: any = {
+        organizationId,
+        nameKanji: formData.nameKanji,
+        nameKana: formData.nameKana,
+        jobType: formData.jobType,
+        position: formData.position,
+        role: formData.role,
+        phoneCompany: formData.phoneCompany,
+        email: formData.email,
+        isActive: true,
+        createdBy: currentUserId,
+        updatedBy: currentUserId,
+      }
+
+      // 任意フィールドが入力されている場合のみ追加
+      if (formData.phonePersonal?.trim()) {
+        staffData.phonePersonal = formData.phonePersonal.trim()
+      }
+      if (formData.memo?.trim()) {
+        staffData.memo = formData.memo.trim()
+      }
+
       // Firebase Auth でユーザーを作成し、Firestore に保存
-      await createStaffWithAuth(
-        formData.email,
-        formData.password,
-        {
-          organizationId,
-          nameKanji: formData.nameKanji,
-          nameKana: formData.nameKana,
-          jobType: formData.jobType,
-          position: formData.position,
-          role: formData.role,
-          phoneCompany: formData.phoneCompany,
-          phonePersonal: formData.phonePersonal || undefined,
-          email: formData.email,
-          isActive: true,
-          memo: formData.memo || undefined,
-          createdBy: currentUserId,
-          updatedBy: currentUserId,
-        }
-      );
+      await createStaffWithAuth(formData.email, formData.password, staffData);
 
       setSuccess(true);
 
@@ -160,7 +165,7 @@ export default function NewStaffPage() {
                 value={formData.nameKanji}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="山田 太郎"
               />
             </div>
@@ -177,7 +182,7 @@ export default function NewStaffPage() {
                 value={formData.nameKana}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="やまだ たろう"
               />
             </div>
@@ -193,7 +198,7 @@ export default function NewStaffPage() {
                 value={formData.jobType}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               >
                 <option value="">選択してください</option>
                 {JOB_TYPES.map(jobType => (
@@ -215,7 +220,7 @@ export default function NewStaffPage() {
                 value={formData.position}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               >
                 <option value="">選択してください</option>
                 {POSITIONS.map(position => (
@@ -237,7 +242,7 @@ export default function NewStaffPage() {
                 value={formData.role}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               >
                 <option value="">選択してください</option>
                 {ROLES.map(role => (
@@ -260,7 +265,7 @@ export default function NewStaffPage() {
                 value={formData.phoneCompany}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="03-1234-5678"
               />
             </div>
@@ -276,7 +281,7 @@ export default function NewStaffPage() {
                 name="phonePersonal"
                 value={formData.phonePersonal}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="090-1234-5678"
               />
             </div>
@@ -293,7 +298,7 @@ export default function NewStaffPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="example@example.com"
               />
             </div>
@@ -311,7 +316,7 @@ export default function NewStaffPage() {
                 onChange={handleChange}
                 required
                 minLength={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="6文字以上"
               />
               <p className="mt-1 text-sm text-gray-500">
@@ -330,7 +335,7 @@ export default function NewStaffPage() {
                 value={formData.memo}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="備考やメモを入力してください"
               />
             </div>
