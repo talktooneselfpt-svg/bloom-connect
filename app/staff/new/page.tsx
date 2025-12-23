@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createStaffWithAuth } from '@/lib/auth/staff';
 import { JOB_TYPES, POSITIONS, ROLES, EMPLOYMENT_TYPES } from '@/types/staff';
+import { generateStaffEmail } from '@/lib/utils/email';
 
 export default function NewStaffPage() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function NewStaffPage() {
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
+    staffNumber: '',
     nameKanji: '',
     nameKana: '',
     jobType: '',
@@ -21,7 +23,6 @@ export default function NewStaffPage() {
     employmentType: '',
     phoneCompany: '',
     phonePersonal: '',
-    email: '',
     password: '',
     hireDate: '',
     licenseNumber: '',
@@ -43,6 +44,9 @@ export default function NewStaffPage() {
 
     try {
       // バリデーション
+      if (!formData.staffNumber) {
+        throw new Error('個人番号は必須項目です');
+      }
       if (!formData.nameKanji || !formData.nameKana) {
         throw new Error('氏名は必須項目です');
       }
@@ -58,17 +62,8 @@ export default function NewStaffPage() {
       if (!formData.phoneCompany) {
         throw new Error('会社用電話番号は必須項目です');
       }
-      if (!formData.email) {
-        throw new Error('メールアドレスは必須項目です');
-      }
       if (!formData.password) {
         throw new Error('パスワードは必須項目です');
-      }
-
-      // メールアドレスの形式チェック
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        throw new Error('有効なメールアドレスを入力してください');
       }
 
       // パスワードの長さチェック
@@ -79,17 +74,22 @@ export default function NewStaffPage() {
       // 仮のデータ（実際にはログインユーザー情報を使用）
       const currentUserId = 'temp-user-id'; // TODO: 実際のユーザーIDに置き換え
       const organizationId = 'temp-org-id'; // TODO: 実際の組織IDに置き換え
+      const organizationCode = 'ORG001'; // TODO: 実際の事業所コードに置き換え
+
+      // メールアドレスを自動生成
+      const email = generateStaffEmail(formData.staffNumber, organizationCode);
 
       // 任意フィールドの処理（空文字列の場合はプロパティ自体を含めない）
       const staffData: any = {
         organizationId,
+        staffNumber: formData.staffNumber,
         nameKanji: formData.nameKanji,
         nameKana: formData.nameKana,
         jobType: formData.jobType,
         position: formData.position,
         role: formData.role,
         phoneCompany: formData.phoneCompany,
-        email: formData.email,
+        email,
         isActive: true,
         createdBy: currentUserId,
         updatedBy: currentUserId,
@@ -119,7 +119,7 @@ export default function NewStaffPage() {
       }
 
       // Firebase Auth でユーザーを作成し、Firestore に保存
-      await createStaffWithAuth(formData.email, formData.password, staffData);
+      await createStaffWithAuth(email, formData.password, staffData);
 
       setSuccess(true);
 
@@ -173,6 +173,26 @@ export default function NewStaffPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* 個人番号（職員番号） */}
+            <div>
+              <label htmlFor="staffNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                個人番号（職員番号） <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="staffNumber"
+                name="staffNumber"
+                value={formData.staffNumber}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                placeholder="例: 001"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                ログイン時に使用する個人番号を入力してください
+              </p>
+            </div>
+
             {/* 氏名（漢字） */}
             <div>
               <label htmlFor="nameKanji" className="block text-sm font-medium text-gray-700 mb-1">
@@ -340,23 +360,6 @@ export default function NewStaffPage() {
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="090-1234-5678"
-              />
-            </div>
-
-            {/* メールアドレス */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                メールアドレス <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                placeholder="example@example.com"
               />
             </div>
 
