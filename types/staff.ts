@@ -6,6 +6,8 @@ export interface Staff {
   organizationId: string;
   /** Firebase Authentication の UID */
   uid: string;
+  /** 個人番号（ログイン用・職員番号） */
+  staffNumber: string;
   /** 氏名（漢字） */
   nameKanji: string;
   /** 氏名（ひらがな） */
@@ -16,6 +18,10 @@ export interface Staff {
   position: string;
   /** 権限ロール */
   role: string;
+  /** 所属部署（任意） */
+  department?: string;
+  /** 勤務形態（任意） */
+  employmentType?: string;
   /** 会社用電話番号 */
   phoneCompany: string;
   /** 個人用電話番号（任意） */
@@ -110,6 +116,19 @@ export const ROLES = [
   'viewer',
 ] as const;
 
+/**
+ * 勤務形態の選択肢
+ */
+export const EMPLOYMENT_TYPES = [
+  '常勤',
+  '非常勤',
+  'パート',
+  'アルバイト',
+  '契約社員',
+  '派遣',
+] as const;
+
 export type JobType = typeof JOB_TYPES[number];
 export type Position = typeof POSITIONS[number];
 export type Role = typeof ROLES[number];
+export type EmploymentType = typeof EMPLOYMENT_TYPES[number];

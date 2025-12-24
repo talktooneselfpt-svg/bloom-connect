@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ヘルパー関数：ユーザーが認証済みかどうか
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // ヘルパー関数：ユーザーのロールを取得
+    function getUserRole() {
+      return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role;
+    }
+
+    // ヘルパー関数：管理者かどうか
+    function isAdmin() {
+      return isSignedIn() && getUserRole() == 'admin';
+    }
+
+    // ヘルパー関数：マネージャー以上かどうか
+    function isManagerOrAbove() {
+      return isSignedIn() && getUserRole() in ['admin', 'manager'];
+    }
+
+    // ヘルパー関数：リーダー以上かどうか
+    function isLeaderOrAbove() {
+      return isSignedIn() && getUserRole() in ['admin', 'manager', 'leader'];
+    }
+
+    // ヘルパー関数：自分自身のデータかどうか
+    function isOwn(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 職員データ（staff コレクション）
+    match /staff/{staffId} {
+      // 読み取り：認証済みユーザーのみ
+      allow read: if isSignedIn();
+
+      // 作成：管理者またはマネージャーのみ
+      allow create: if isManagerOrAbove();
+
+      // 更新：管理者・マネージャー、またはリーダー以上で自分自身のデータの場合
+      allow update: if isManagerOrAbove() ||
+                       (isLeaderOrAbove() && isOwn(staffId));
+
+      // 削除：管理者のみ
+      allow delete: if isAdmin();
+    }
+
+    // 組織データ（organizations コレクション）- 将来の拡張用
+    match /organizations/{organizationId} {
+      // 読み取り：認証済みユーザーのみ
+      allow read: if isSignedIn();
+
+      // 書き込み：管理者のみ
+      allow write: if isAdmin();
+    }
+
+    // 利用者データ（clients コレクション）
+    match /clients/{clientId} {
+      // 読み取り：認証済みユーザーのみ
+      allow read: if isSignedIn();
+
+      // 作成：リーダー以上のみ
+      allow create: if isLeaderOrAbove();
+
+      // 更新：リーダー以上のみ
+      allow update: if isLeaderOrAbove();
+
+      // 削除：管理者のみ
+      allow delete: if isAdmin();
+    }
+  }
+}

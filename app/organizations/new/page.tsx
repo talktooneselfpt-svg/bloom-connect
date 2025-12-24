@@ -1,0 +1,498 @@
+"use client"
+
+import { useState, FormEvent } from "react"
+import { useRouter } from "next/navigation"
+import { createOrganization, isOrganizationCodeAvailable } from "@/lib/firestore/organizations"
+import { ORGANIZATION_TYPES, PREFECTURES } from "@/types/organization"
+import { serverTimestamp } from "firebase/firestore"
+
+export default function NewOrganizationPage() {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  const [formData, setFormData] = useState({
+    organizationCode: "",
+    name: "",
+    nameKana: "",
+    prefecture: "",
+    city: "",
+    addressLine: "",
+    postalCode: "",
+    phone: "",
+    email: "",
+    organizationType: "",
+    administratorName: "",
+    administratorEmail: "",
+    logoUrl: "",
+    termsAgreed: false
+  })
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target
+
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked
+      setFormData(prev => ({ ...prev, [name]: checked }))
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+    }
+  }
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
+
+    try {
+      // バリデーション
+      if (!formData.organizationCode) {
+        throw new Error("事業所番号は必須項目です")
+      }
+      if (!formData.name) {
+        throw new Error("事業所名は必須項目です")
+      }
+      if (!formData.phone) {
+        throw new Error("電話番号は必須項目です")
+      }
+      if (!formData.email) {
+        throw new Error("連絡用メールアドレスは必須項目です")
+      }
+      if (!formData.organizationType) {
+        throw new Error("事業所種別は必須項目です")
+      }
+      if (!formData.administratorName) {
+        throw new Error("管理者名は必須項目です")
+      }
+      if (!formData.termsAgreed) {
+        throw new Error("利用規約に同意してください")
+      }
+
+      // 事業所コードの重複チェック
+      const isAvailable = await isOrganizationCodeAvailable(formData.organizationCode)
+      if (!isAvailable) {
+        throw new Error("この事業所番号は既に使用されています")
+      }
+
+      // TODO: 実際のユーザーIDに置き換え
+      const currentUserId = "temp-user-id"
+
+      // 事業所データの準備
+      const organizationData: any = {
+        organizationCode: formData.organizationCode,
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        organizationType: formData.organizationType,
+        administratorName: formData.administratorName,
+        isActive: true,
+        createdBy: currentUserId,
+        updatedBy: currentUserId
+      }
+
+      // 任意フィールドの処理
+      if (formData.nameKana?.trim()) {
+        organizationData.nameKana = formData.nameKana.trim()
+      }
+      if (formData.prefecture?.trim()) {
+        organizationData.prefecture = formData.prefecture.trim()
+      }
+      if (formData.city?.trim()) {
+        organizationData.city = formData.city.trim()
+      }
+      if (formData.addressLine?.trim()) {
+        organizationData.addressLine = formData.addressLine.trim()
+      }
+      if (formData.postalCode?.trim()) {
+        organizationData.postalCode = formData.postalCode.trim()
+      }
+      if (formData.administratorEmail?.trim()) {
+        organizationData.administratorEmail = formData.administratorEmail.trim()
+      }
+      if (formData.logoUrl?.trim()) {
+        organizationData.logoUrl = formData.logoUrl.trim()
+      }
+
+      // 規約同意情報
+      if (formData.termsAgreed) {
+        organizationData.termsAgreement = {
+          version: "1.0",
+          agreedAt: serverTimestamp(),
+          agreedBy: currentUserId
+        }
+      }
+
+      await createOrganization(organizationData)
+
+      setSuccess(true)
+
+      // 3秒後に一覧ページにリダイレクト
+      setTimeout(() => {
+        router.push("/organizations")
+      }, 3000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "事業所の登録に失敗しました")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+          <div className="mb-4">
+            <svg
+              className="mx-auto h-12 w-12 text-green-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">登録完了</h2>
+          <p className="text-gray-600">事業所の登録が完了しました。</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">事業所登録</h1>
+
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* 基本情報セクション */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+                基本情報
+              </h2>
+              <div className="space-y-4">
+                {/* 事業所番号 */}
+                <div>
+                  <label htmlFor="organizationCode" className="block text-sm font-medium text-gray-700 mb-1">
+                    事業所番号 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="organizationCode"
+                    name="organizationCode"
+                    value={formData.organizationCode}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: ORG001"
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    ログイン時に使用する事業所番号（ユニーク）
+                  </p>
+                </div>
+
+                {/* 事業所名 */}
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    事業所名 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: 〇〇訪問看護ステーション"
+                  />
+                </div>
+
+                {/* 事業所名（ひらがな） */}
+                <div>
+                  <label htmlFor="nameKana" className="block text-sm font-medium text-gray-700 mb-1">
+                    事業所名（ひらがな）
+                  </label>
+                  <input
+                    type="text"
+                    id="nameKana"
+                    name="nameKana"
+                    value={formData.nameKana}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: まるまるほうもんかんご"
+                  />
+                </div>
+
+                {/* 事業所種別 */}
+                <div>
+                  <label htmlFor="organizationType" className="block text-sm font-medium text-gray-700 mb-1">
+                    事業所種別 <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="organizationType"
+                    name="organizationType"
+                    value={formData.organizationType}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                  >
+                    <option value="">選択してください</option>
+                    {ORGANIZATION_TYPES.map(type => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            {/* 所在地情報セクション */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+                所在地情報
+              </h2>
+              <div className="space-y-4">
+                {/* 郵便番号 */}
+                <div>
+                  <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
+                    郵便番号
+                  </label>
+                  <input
+                    type="text"
+                    id="postalCode"
+                    name="postalCode"
+                    value={formData.postalCode}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: 123-4567"
+                  />
+                </div>
+
+                {/* 都道府県 */}
+                <div>
+                  <label htmlFor="prefecture" className="block text-sm font-medium text-gray-700 mb-1">
+                    都道府県
+                  </label>
+                  <select
+                    id="prefecture"
+                    name="prefecture"
+                    value={formData.prefecture}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                  >
+                    <option value="">選択してください</option>
+                    {PREFECTURES.map(pref => (
+                      <option key={pref} value={pref}>
+                        {pref}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 市区町村 */}
+                <div>
+                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+                    市区町村
+                  </label>
+                  <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: 渋谷区"
+                  />
+                </div>
+
+                {/* 詳細住所 */}
+                <div>
+                  <label htmlFor="addressLine" className="block text-sm font-medium text-gray-700 mb-1">
+                    詳細住所
+                  </label>
+                  <input
+                    type="text"
+                    id="addressLine"
+                    name="addressLine"
+                    value={formData.addressLine}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: 渋谷1-2-3 〇〇ビル4階"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* 連絡先情報セクション */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+                連絡先情報
+              </h2>
+              <div className="space-y-4">
+                {/* 電話番号 */}
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    電話番号 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: 03-1234-5678"
+                  />
+                </div>
+
+                {/* 連絡用メールアドレス */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    連絡用メールアドレス <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: info@example.com"
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    重要なお知らせやパスワードリセットの送信先
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* 管理者情報セクション */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+                管理者情報
+              </h2>
+              <div className="space-y-4">
+                {/* 管理者名 */}
+                <div>
+                  <label htmlFor="administratorName" className="block text-sm font-medium text-gray-700 mb-1">
+                    管理者名 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="administratorName"
+                    name="administratorName"
+                    value={formData.administratorName}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: 山田 太郎"
+                  />
+                </div>
+
+                {/* 管理者メールアドレス */}
+                <div>
+                  <label htmlFor="administratorEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                    管理者メールアドレス
+                  </label>
+                  <input
+                    type="email"
+                    id="administratorEmail"
+                    name="administratorEmail"
+                    value={formData.administratorEmail}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: admin@example.com"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* ブランディングセクション */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+                ブランディング
+              </h2>
+              <div className="space-y-4">
+                {/* ロゴURL */}
+                <div>
+                  <label htmlFor="logoUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                    ロゴ画像URL
+                  </label>
+                  <input
+                    type="url"
+                    id="logoUrl"
+                    name="logoUrl"
+                    value={formData.logoUrl}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="例: https://example.com/logo.png"
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    画像アップロード機能は後日実装予定
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* 利用規約同意 */}
+            <section>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <input
+                    type="checkbox"
+                    id="termsAgreed"
+                    name="termsAgreed"
+                    checked={formData.termsAgreed}
+                    onChange={handleChange}
+                    required
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                  />
+                  <label htmlFor="termsAgreed" className="ml-2 text-sm text-gray-700">
+                    <span className="text-red-500">*</span> 利用規約に同意します
+                    {/* TODO: 実際の利用規約へのリンクを追加 */}
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            {/* 送信ボタン */}
+            <div className="flex gap-4 pt-4">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSubmitting ? "登録中..." : "登録する"}
+              </button>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              >
+                キャンセル
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}

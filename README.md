@@ -18,21 +18,39 @@ Firebase Authentication と Firestore を活用し、職員の登録・管理を
 
 ### 実装済み機能
 
-1. **職員登録**（`/staff/new`）
-   - 氏名（漢字・ひらがな）
-   - 職種・役職・権限ロールの選択
+1. **🔐 認証・ログイン機能**（`/auth/login`）
+   - **初回ログイン（完全認証）**: 事業所番号 + 個人番号 + パスワード
+   - **簡易ログイン（信頼済みデバイス）**:
+     - PIN認証（4〜6桁）
+     - 生体認証（顔認証・指紋認証）- Web Authentication API使用
+   - デバイスを信頼済みとして登録
+   - ログイン方式の自動切り替え
+
+2. **職員登録**（`/staff/new`）
+   - 氏名（漢字・ひらがな）、個人番号
+   - 職種・役職・権限ロール、所属部署・勤務形態の選択
    - 電話番号・メールアドレス
+   - 入社日、資格番号、緊急連絡先
    - Firebase Auth でのアカウント作成
 
-2. **職員一覧**（`/staff`）
-   - 在職中の職員一覧表示
-   - 退職者の表示切り替え
-   - 退職処理機能
+3. **職員一覧**（`/staff`）
+   - 検索機能（名前、職種、役職、メールアドレス）
+   - 絞り込み機能（在職状態、権限ロール）
+   - 行クリックで詳細ページへ遷移
+   - 編集・退職処理機能
 
-3. **認証連携**
-   - Firebase Authentication でのユーザー作成
-   - Firestore への職員データ保存
-   - UID の自動紐づけ
+4. **職員詳細**（`/staff/[id]`）
+   - 職員情報の詳細表示
+   - セクション別に整理（基本情報、連絡先、勤務情報、システム情報）
+
+5. **職員編集**（`/staff/[id]/edit`）
+   - 職員情報の更新
+   - すべてのフィールドに対応
+
+6. **Firebase連携**
+   - Firebase Authentication でのユーザー管理
+   - Firestore への職員・組織データ保存
+   - ロールベースのアクセス制御（Security Rules）
 
 ## プロジェクト構成
 
@@ -124,10 +142,58 @@ npm run dev
 | パス | 説明 |
 |------|------|
 | `/` | トップページ |
-| `/staff` | 職員一覧 |
+| `/auth/login` | ログインページ（完全認証・PIN・生体認証） |
+| `/staff` | 職員一覧（検索・絞り込み機能付き） |
 | `/staff/new` | 職員登録フォーム |
+| `/staff/[id]` | 職員詳細ページ |
+| `/staff/[id]/edit` | 職員編集ページ |
+
+## 認証アーキテクチャ
+
+### **ログイン方式**
+
+#### 1. 初回ログイン（完全認証）
+- **事業所番号**（organizationCode）で組織を特定
+- **個人番号**（staffNumber）+ **パスワード**で職員を認証
+- 「このデバイスを信頼する」をONにすると、次回から簡易ログイン可能
+
+#### 2. 簡易ログイン（信頼済みデバイス）
+- **PIN認証**: 4〜6桁のPINで認証
+- **生体認証**: Web Authentication API（WebAuthn）で顔認証・指紋認証
+
+### **デバイス管理**
+
+- デバイスフィンガープリント生成（ブラウザ情報から一意のIDを生成）
+- `trustedDevices` コレクションで信頼済みデバイスを管理
+- デバイスごとにPINハッシュ、生体認証Credential IDを保存
+- 最終使用日時を記録し、一定期間後に再認証を要求可能
+
+### **セキュリティ**
+
+- PINはSHA-256でハッシュ化して保存
+- 生体認証はブラウザのネイティブAPIを使用（指紋データはサーバーに送信されない）
+- Firestore Security Rulesでロールベースのアクセス制御
 
 ## データモデル
+
+### Organization（事業所）
+
+```typescript
+interface Organization {
+  id: string;                 // 事業所ID
+  organizationCode: string;   // 事業所番号（ログイン用）
+  name: string;               // 事業所名
+  nameKana?: string;          // 事業所名（ひらがな）
+  postalCode?: string;        // 郵便番号
+  address?: string;           // 住所
+  phone?: string;             // 電話番号
+  email?: string;             // メールアドレス
+  isActive: boolean;          // 有効状態
+  plan?: string;              // プラン
+  createdAt: string;          // 作成日時
+  updatedAt: string;          // 更新日時
+}
+```
 
 ### Staff（職員）
 
@@ -135,11 +201,14 @@ npm run dev
 interface Staff {
   organizationId: string;     // 組織ID
   uid: string;                // Firebase Auth UID
+  staffNumber: string;        // 個人番号（ログイン用・職員番号）
   nameKanji: string;          // 氏名（漢字）
   nameKana: string;           // 氏名（ひらがな）
   jobType: string;            // 職種
   position: string;           // 役職
   role: string;               // 権限ロール
+  department?: string;        // 所属部署
+  employmentType?: string;    // 勤務形態
   phoneCompany: string;       // 会社用電話番号
   phonePersonal?: string;     // 個人用電話番号
   email: string;              // メールアドレス
@@ -184,9 +253,28 @@ interface Staff {
 - `getActiveStaff(organizationId)` - 在職中の職員を取得
 - `retireStaff(staffId, retireDate, updatedBy)` - 職員を退職状態にする
 
-### Auth 関数（`lib/auth/staff.ts`）
+### Auth 関数
 
+#### `lib/auth/staff.ts`
 - `createStaffWithAuth(email, password, staffData)` - Auth アカウントと職員データを同時作成
+
+#### `lib/auth/device.ts`
+- `generateDeviceFingerprint()` - デバイスフィンガープリントを生成
+- `getOrCreateDeviceId()` - デバイスIDを取得または生成
+- `hashPin(pin)` - PINをハッシュ化
+- `verifyPin(pin, pinHash)` - PINを検証
+- `isBiometricAvailable()` - 生体認証が利用可能かチェック
+- `registerBiometric(userId, userName)` - 生体認証を登録
+- `authenticateWithBiometric(credentialId)` - 生体認証で認証
+
+#### `lib/firestore/auth.ts`
+- `getOrganizationByCode(organizationCode)` - 事業所番号から組織を取得
+- `getStaffByNumber(organizationId, staffNumber)` - 組織ID + 個人番号から職員を取得
+- `registerTrustedDevice(device)` - 信頼済みデバイスを登録
+- `getTrustedDevice(deviceId)` - 信頼済みデバイスを取得
+- `updateDeviceLastUsed(deviceId)` - デバイスの最終使用日時を更新
+- `updateDevicePin(deviceId, pinHash)` - デバイスのPINハッシュを更新
+- `updateDeviceBiometric(deviceId, credentialId)` - デバイスの生体認証設定を更新
 
 ## 技術スタック
 
@@ -200,13 +288,26 @@ interface Staff {
 
 ## TODO
 
-- [ ] 組織管理機能の実装
-- [ ] ログイン機能の実装
-- [ ] プロフィール編集機能
-- [ ] 職員詳細ページ
-- [ ] 検索・フィルタリング機能
+### 実装済み ✅
+- [x] 職員データ基盤の実装
+- [x] ログイン機能の実装（完全認証・PIN・生体認証）
+- [x] 職員詳細ページ
+- [x] 職員編集ページ
+- [x] 検索・フィルタリング機能
+- [x] Firestore Security Rules（ロールベースのアクセス制御）
+- [x] データ構造の拡張（所属部署、勤務形態、入社日、資格番号、緊急連絡先）
+
+### 今後の実装予定
+- [ ] 組織管理機能の実装（事業所番号の発行・管理）
+- [ ] PIN設定ページ（初回ログイン後にPINを設定）
+- [ ] 生体認証設定ページ（初回ログイン後に生体認証を設定）
+- [ ] AuthContext（認証状態管理・グローバルな認証情報の管理）
+- [ ] ログアウト機能
+- [ ] プロフィール編集機能（自分自身の情報を編集）
 - [ ] エクスポート機能（CSV/Excel）
 - [ ] 職員のインポート機能
+- [ ] ページネーション機能
+- [ ] トースト通知コンポーネント
 
 ## ライセンス
 
