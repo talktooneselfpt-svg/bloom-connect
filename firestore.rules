@@ -55,5 +55,20 @@ service cloud.firestore {
       // 書き込み：管理者のみ
       allow write: if isAdmin();
     }
+
+    // 利用者データ（clients コレクション）
+    match /clients/{clientId} {
+      // 読み取り：認証済みユーザーのみ
+      allow read: if isSignedIn();
+
+      // 作成：リーダー以上のみ
+      allow create: if isLeaderOrAbove();
+
+      // 更新：リーダー以上のみ
+      allow update: if isLeaderOrAbove();
+
+      // 削除：管理者のみ
+      allow delete: if isAdmin();
+    }
   }
 }
