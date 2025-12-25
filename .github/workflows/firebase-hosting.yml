@@ -3,7 +3,6 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main
       - claude/staff-data-foundation-72iE4
 
 jobs:
