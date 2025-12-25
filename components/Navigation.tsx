@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 
 interface NavItem {
   name: string
   path: string
-  icon: JSX.Element
+  icon: React.ReactElement
 }
 
 export default function Navigation() {
