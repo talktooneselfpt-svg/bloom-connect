@@ -1,0 +1,9 @@
+Build Version: 359c1a8
+Date: 2025-12-25
+Status: All fixes applied
+- Firebase dependency added
+- Login page syntax fixed
+- getAllStaff() function added
+- getAllClients() function added
+- TypeScript errors fixed
+- GitHub Actions workflow updated
