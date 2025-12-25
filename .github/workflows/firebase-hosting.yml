@@ -18,7 +18,14 @@ jobs:
           node-version: '20.9.0'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Debug: show versions and package.json
+        run: |
+          node -v
+          npm -v
+          npx next --version || true
+          cat package.json
 
       - name: Build
         run: npm run build
