@@ -70,6 +70,17 @@ export async function updateClient(
 }
 
 /**
+ * すべての利用者を取得
+ */
+export async function getAllClients(): Promise<Client[]> {
+  const querySnapshot = await getDocs(collection(db, CLIENTS_COLLECTION))
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  } as Client))
+}
+
+/**
  * 組織の全利用者を取得
  */
 export async function getClientsByOrganization(organizationId: string): Promise<Client[]> {

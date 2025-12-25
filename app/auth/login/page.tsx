@@ -194,7 +194,7 @@ export default function LoginPage() {
                 onClick={() => setLoginMode('biometric')}
                 className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
                   loginMode === 'biometric'
-                    : 'bg-white text-blue-600 shadow-sm'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >

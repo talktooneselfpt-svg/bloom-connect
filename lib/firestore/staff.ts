@@ -54,6 +54,17 @@ export async function updateStaff(
 }
 
 /**
+ * すべての職員一覧を取得
+ * @returns 職員データの配列
+ */
+export async function getAllStaff(): Promise<Staff[]> {
+  const staffCollection = collection(db, 'staff');
+  const querySnapshot = await getDocs(staffCollection);
+
+  return querySnapshot.docs.map(doc => doc.data() as Staff);
+}
+
+/**
  * 組織の職員一覧を取得
  * @param organizationId 組織ID
  * @returns 職員データの配列
