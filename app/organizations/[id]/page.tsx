@@ -4,10 +4,6 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { getOrganization, deactivateOrganization, reactivateOrganization } from "@/lib/firestore/organizations"
 import { Organization } from "@/types/organization"
-
-// 静的エクスポート用の設定 - 動的ルートをクライアントサイドで処理
-export const dynamicParams = true
-
 export default function OrganizationDetailPage() {
   const router = useRouter()
   const params = useParams()
