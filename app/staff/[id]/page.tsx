@@ -5,10 +5,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { getStaff } from '@/lib/firestore/staff';
 import { Staff } from '@/types/staff';
 
-// 静的エクスポート用の設定 - クライアントサイドでレンダリング
-export async function generateStaticParams() {
-  return []
-}
+// 静的エクスポート用の設定 - 動的ルートをクライアントサイドで処理
+export const dynamicParams = true
 
 export default function StaffDetailPage() {
   const router = useRouter();
