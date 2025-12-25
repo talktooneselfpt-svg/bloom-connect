@@ -6,6 +6,11 @@ import { getClient, retireClient, reactivateClient } from "@/lib/firestore/clien
 import { Client } from "@/types/client"
 import { calculateAge } from "@/lib/utils/age"
 
+// 静的エクスポート用の設定 - クライアントサイドでレンダリング
+export async function generateStaticParams() {
+  return []
+}
+
 export default function ClientDetailPage() {
   const router = useRouter()
   const params = useParams()

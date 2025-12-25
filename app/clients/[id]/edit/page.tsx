@@ -6,6 +6,11 @@ import { getClient, updateClient } from "@/lib/firestore/clients"
 import { Client, GENDERS, LIVING_ARRANGEMENTS, CARE_LEVELS, ADL_LEVELS, SWALLOWING_STATUS } from "@/types/client"
 import { calculateAge, isValidBirthDate } from "@/lib/utils/age"
 
+// 静的エクスポート用の設定 - クライアントサイドでレンダリング
+export async function generateStaticParams() {
+  return []
+}
+
 export default function EditClientPage() {
   const router = useRouter()
   const params = useParams()
