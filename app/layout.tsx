@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bloom Connect - スタッフ管理システム",
+  title: "ブルームコネクト - スタッフ管理システム",
   description: "介護・医療施設向けスタッフ管理システム",
   manifest: "/manifest.json",
   themeColor: "#2563eb",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Bloom Connect"
+    title: "ブルームコネクト"
   }
 };
 

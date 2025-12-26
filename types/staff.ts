@@ -109,11 +109,11 @@ export const POSITIONS = [
  * 権限ロールの選択肢
  */
 export const ROLES = [
-  'admin',
-  'manager',
-  'leader',
-  'staff',
-  'viewer',
+  '管理者',
+  'マネージャー',
+  'リーダー',
+  'スタッフ',
+  'ビューアー',
 ] as const;
 
 /**

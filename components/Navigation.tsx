@@ -125,7 +125,7 @@ export default function Navigation() {
         {/* フッター */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
-            © 2024 Bloom Connect
+            © 2025 ブルームコネクト
           </p>
         </div>
       </nav>
