@@ -18,7 +18,16 @@ jobs:
           node-version: '20.9.0'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
+
+      - name: Verify Firebase installation
+        run: |
+          echo "Checking installed packages..."
+          npm list firebase || true
+          echo "Checking package.json..."
+          cat package.json | grep -A 5 dependencies
 
       - name: Build
         run: npm run build
