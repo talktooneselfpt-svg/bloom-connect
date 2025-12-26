@@ -105,6 +105,7 @@ export default function SetupPage() {
         phoneCompany: adminData.phoneCompany,
         email: adminData.email,
         isActive: true,
+        passwordSetupCompleted: true, // 代表者は初回セットアップ時にパスワードを設定済み
         createdBy: uid,
         updatedBy: uid,
       })

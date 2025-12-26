@@ -3,7 +3,8 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { getOrganizationByCode, getStaffByNumber, getTrustedDevice, registerTrustedDevice, updateDeviceLastUsed } from '@/lib/firestore/auth';
 import { getOrCreateDeviceId, generateDeviceFingerprint, hashPin, verifyPin, isBiometricAvailable, authenticateWithBiometric } from '@/lib/auth/device';
 
@@ -75,9 +76,19 @@ export default function LoginPage() {
       }
 
       // 3. Firebase Authentication でログイン
-      await signInWithEmailAndPassword(auth, staff.email, fullAuthData.password);
+      const userCredential = await signInWithEmailAndPassword(auth, staff.email, fullAuthData.password);
 
-      // 4. デバイスを信頼済みとして登録（チェックボックスがONの場合）
+      // 4. パスワード設定完了フラグをチェック
+      const staffDoc = await getDoc(doc(db, 'staff', userCredential.user.uid));
+      const staffData = staffDoc.data();
+
+      if (staffData && !staffData.passwordSetupCompleted) {
+        // 初回ログイン - パスワード設定ページにリダイレクト
+        router.push('/auth/setup-password');
+        return;
+      }
+
+      // 5. デバイスを信頼済みとして登録（チェックボックスがONの場合）
       if (fullAuthData.rememberDevice && deviceId) {
         const fingerprint = generateDeviceFingerprint();
         await registerTrustedDevice({
@@ -90,7 +101,7 @@ export default function LoginPage() {
         });
       }
 
-      // 5. ホームページにリダイレクト
+      // 6. ホームページにリダイレクト
       router.push('/staff');
     } catch (err: any) {
       if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {

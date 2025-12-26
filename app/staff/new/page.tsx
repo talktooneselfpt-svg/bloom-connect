@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { createStaffWithAuth } from '@/lib/auth/staff';
 import { JOB_TYPES, POSITIONS, ROLES, EMPLOYMENT_TYPES } from '@/types/staff';
 import { generateStaffEmail } from '@/lib/utils/email';
+import { generateTemporaryPassword } from '@/lib/utils/idGenerator';
 
 export default function NewStaffPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [temporaryPassword, setTemporaryPassword] = useState<string>('');
 
   const [formData, setFormData] = useState({
     staffNumber: '',
@@ -23,7 +25,6 @@ export default function NewStaffPage() {
     employmentType: '',
     phoneCompany: '',
     phonePersonal: '',
-    password: '',
     hireDate: '',
     licenseNumber: '',
     emergencyContact: '',
@@ -62,14 +63,10 @@ export default function NewStaffPage() {
       if (!formData.phoneCompany) {
         throw new Error('会社用電話番号は必須項目です');
       }
-      if (!formData.password) {
-        throw new Error('パスワードは必須項目です');
-      }
 
-      // パスワードの長さチェック
-      if (formData.password.length < 6) {
-        throw new Error('パスワードは6文字以上で設定してください');
-      }
+      // 一時パスワードを生成
+      const tempPassword = generateTemporaryPassword();
+      setTemporaryPassword(tempPassword);
 
       // 仮のデータ（実際にはログインユーザー情報を使用）
       const currentUserId = 'temp-user-id'; // TODO: 実際のユーザーIDに置き換え
@@ -91,6 +88,7 @@ export default function NewStaffPage() {
         phoneCompany: formData.phoneCompany,
         email,
         isActive: true,
+        passwordSetupCompleted: false, // 初回ログイン時にパスワード設定が必要
         createdBy: currentUserId,
         updatedBy: currentUserId,
       }
@@ -118,8 +116,8 @@ export default function NewStaffPage() {
         staffData.memo = formData.memo.trim()
       }
 
-      // Firebase Auth でユーザーを作成し、Firestore に保存
-      await createStaffWithAuth(email, formData.password, staffData);
+      // Firebase Auth でユーザーを作成し、Firestore に保存（一時パスワードを使用）
+      await createStaffWithAuth(email, tempPassword, staffData);
 
       setSuccess(true);
 
@@ -137,8 +135,8 @@ export default function NewStaffPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
-          <div className="mb-4">
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
+          <div className="text-center mb-6">
             <svg
               className="mx-auto h-12 w-12 text-green-500"
               fill="none"
@@ -153,8 +151,34 @@ export default function NewStaffPage() {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">登録完了</h2>
-          <p className="text-gray-600">職員の登録が完了しました。</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">登録完了</h2>
+          <p className="text-gray-600 mb-6 text-center">職員の登録が完了しました。</p>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <h3 className="text-sm font-semibold text-yellow-800 mb-2">一時パスワード</h3>
+            <p className="text-xs text-yellow-700 mb-3">
+              この一時パスワードを職員に伝えてください。初回ログイン時に新しいパスワードの設定が必要です。
+            </p>
+            <div className="bg-white rounded border border-yellow-300 p-3 font-mono text-lg text-center select-all">
+              {temporaryPassword}
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="text-sm font-semibold text-blue-800 mb-2">ログイン情報</h3>
+            <div className="text-sm text-blue-700 space-y-1">
+              <p><span className="font-medium">事業所番号:</span> ORG001</p>
+              <p><span className="font-medium">職員番号:</span> {formData.staffNumber}</p>
+              <p><span className="font-medium">氏名:</span> {formData.nameKanji}</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => router.push('/staff')}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            職員一覧に戻る
+          </button>
         </div>
       </div>
     );
@@ -363,24 +387,10 @@ export default function NewStaffPage() {
               />
             </div>
 
-            {/* パスワード */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                パスワード <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                minLength={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                placeholder="6文字以上"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                ログイン用のパスワード（6文字以上）
+            {/* 一時パスワード自動生成の案内 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <p className="text-sm text-blue-700">
+                <span className="font-semibold">パスワードについて:</span> 一時パスワードは自動生成されます。登録完了後に表示されますので、職員に伝えてください。職員は初回ログイン時に新しいパスワードを設定します。
               </p>
             </div>
 
