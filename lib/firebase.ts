@@ -16,15 +16,21 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || 'dummy-app-id',
 }
 
-// Firebaseアプリの初期化（ビルド時はスキップ）
-let app: FirebaseApp | null = null
-let db: Firestore | null = null
-let auth: Auth | null = null
+// Firebaseアプリの初期化（ビルド時はダミー、ランタイムで実際の値に置き換え）
+let app: FirebaseApp
+let db: Firestore
+let auth: Auth
 
 if (typeof window !== 'undefined' || isConfigured) {
+  // クライアントサイドまたは環境変数が設定されている場合
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
   db = getFirestore(app)
   auth = getAuth(app)
+} else {
+  // ビルド時のダミーオブジェクト（実際には使用されない）
+  app = {} as FirebaseApp
+  db = {} as Firestore
+  auth = {} as Auth
 }
 
 export { app, db, auth }
