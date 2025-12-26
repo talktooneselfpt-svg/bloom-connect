@@ -85,8 +85,16 @@ export default function SetupPage() {
 
       // 2. 事業所を作成
       const organizationId = await createOrganization({
-        ...orgData,
         organizationCode: '', // 自動生成される
+        name: orgData.name,
+        organizationType: orgData.type,
+        postalCode: orgData.postalCode,
+        prefecture: orgData.prefecture,
+        city: orgData.city,
+        addressLine: orgData.address,
+        phone: orgData.phoneNumber,
+        email: orgData.email,
+        administratorName: adminData.nameKanji, // 代表者の名前を管理者名に設定
         isActive: true,
         createdBy: uid,
         updatedBy: uid,

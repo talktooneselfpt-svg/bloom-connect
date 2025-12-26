@@ -9,7 +9,6 @@ const nextConfig: NextConfig = {
   // トレイリングスラッシュを追加してFirebase Hostingと互換性を持たせる
   trailingSlash: true,
   // パフォーマンス最適化
-  swcMinify: true, // SWCによる高速なミニファイ
   compress: true, // Gzip圧縮を有効化
   poweredByHeader: false, // X-Powered-Byヘッダーを削除（セキュリティ向上）
   reactStrictMode: true, // Reactの厳格モードを有効化
