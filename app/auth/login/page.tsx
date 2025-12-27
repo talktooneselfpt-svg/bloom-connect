@@ -3,7 +3,8 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { getOrganizationByCode, getStaffByNumber, getTrustedDevice, registerTrustedDevice, updateDeviceLastUsed } from '@/lib/firestore/auth';
 import { getOrCreateDeviceId, generateDeviceFingerprint, hashPin, verifyPin, isBiometricAvailable, authenticateWithBiometric } from '@/lib/auth/device';
 
@@ -75,9 +76,19 @@ export default function LoginPage() {
       }
 
       // 3. Firebase Authentication でログイン
-      await signInWithEmailAndPassword(auth, staff.email, fullAuthData.password);
+      const userCredential = await signInWithEmailAndPassword(auth, staff.email, fullAuthData.password);
 
-      // 4. デバイスを信頼済みとして登録（チェックボックスがONの場合）
+      // 4. パスワード設定完了フラグをチェック
+      const staffDoc = await getDoc(doc(db, 'staff', userCredential.user.uid));
+      const staffData = staffDoc.data();
+
+      if (staffData && !staffData.passwordSetupCompleted) {
+        // 初回ログイン - パスワード設定ページにリダイレクト
+        router.push('/auth/setup-password');
+        return;
+      }
+
+      // 5. デバイスを信頼済みとして登録（チェックボックスがONの場合）
       if (fullAuthData.rememberDevice && deviceId) {
         const fingerprint = generateDeviceFingerprint();
         await registerTrustedDevice({
@@ -90,7 +101,7 @@ export default function LoginPage() {
         });
       }
 
-      // 5. ホームページにリダイレクト
+      // 6. ホームページにリダイレクト
       router.push('/staff');
     } catch (err: any) {
       if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
@@ -194,7 +205,7 @@ export default function LoginPage() {
                 onClick={() => setLoginMode('biometric')}
                 className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
                   loginMode === 'biometric'
-                    : 'bg-white text-blue-600 shadow-sm'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -278,8 +289,11 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
             >
+              {isSubmitting && (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              )}
               {isSubmitting ? 'ログイン中...' : 'ログイン'}
             </button>
           </form>

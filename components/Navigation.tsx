@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 
 interface NavItem {
   name: string
   path: string
-  icon: JSX.Element
+  icon: React.ReactElement
 }
 
 export default function Navigation() {
@@ -125,7 +125,7 @@ export default function Navigation() {
         {/* フッター */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
-            © 2024 Bloom Connect
+            © 2025 ブルームコネクト
           </p>
         </div>
       </nav>

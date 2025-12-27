@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { getOrganization, deactivateOrganization, reactivateOrganization } from "@/lib/firestore/organizations"
 import { Organization } from "@/types/organization"
-
 export default function OrganizationDetailPage() {
   const router = useRouter()
   const params = useParams()

@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Organization } from "@/types/organization"
+import { generateOrganizationCode } from "@/lib/utils/idGenerator"
 
 const ORGANIZATIONS_COLLECTION = "organizations"
 
@@ -28,8 +29,20 @@ export async function createOrganization(
 ): Promise<string> {
   const orgRef = doc(collection(db, ORGANIZATIONS_COLLECTION))
 
+  // 事業所番号が提供されていない場合は自動生成
+  let organizationCode = organizationData.organizationCode
+  if (!organizationCode) {
+    // 一意性を確保するまで生成を繰り返す
+    let isUnique = false
+    while (!isUnique) {
+      organizationCode = generateOrganizationCode()
+      isUnique = await isOrganizationCodeAvailable(organizationCode)
+    }
+  }
+
   await setDoc(orgRef, {
     ...organizationData,
+    organizationCode,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   })

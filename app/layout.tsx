@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navigation from "@/components/Navigation";
+import dynamic from "next/dynamic";
+
+// ナビゲーションを動的にインポート（初期ロードを高速化）
+const Navigation = dynamic(() => import("@/components/Navigation"), {
+  ssr: true,
+  loading: () => <div className="h-16 bg-white border-b border-gray-200" />
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bloom Connect - スタッフ管理システム",
+  title: "ブルームコネクト - スタッフ管理システム",
   description: "介護・医療施設向けスタッフ管理システム",
   manifest: "/manifest.json",
   themeColor: "#2563eb",
@@ -22,7 +28,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Bloom Connect"
+    title: "ブルームコネクト"
+  },
+  other: {
+    'link': 'preconnect https://firestore.googleapis.com, preconnect https://identitytoolkit.googleapis.com'
   }
 };
 

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getStaff } from '@/lib/firestore/staff';
 import { Staff } from '@/types/staff';
-
 export default function StaffDetailPage() {
   const router = useRouter();
   const params = useParams();

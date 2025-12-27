@@ -5,7 +5,6 @@ import { useRouter, useParams } from "next/navigation"
 import { getClient, retireClient, reactivateClient } from "@/lib/firestore/clients"
 import { Client } from "@/types/client"
 import { calculateAge } from "@/lib/utils/age"
-
 export default function ClientDetailPage() {
   const router = useRouter()
   const params = useParams()

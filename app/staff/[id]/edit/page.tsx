@@ -4,7 +4,6 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getStaff, updateStaff } from '@/lib/firestore/staff';
 import { JOB_TYPES, POSITIONS, ROLES, EMPLOYMENT_TYPES, Staff } from '@/types/staff';
-
 export default function EditStaffPage() {
   const router = useRouter();
   const params = useParams();

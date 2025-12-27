@@ -5,7 +5,6 @@ import { useRouter, useParams } from "next/navigation"
 import { getClient, updateClient } from "@/lib/firestore/clients"
 import { Client, GENDERS, LIVING_ARRANGEMENTS, CARE_LEVELS, ADL_LEVELS, SWALLOWING_STATUS } from "@/types/client"
 import { calculateAge, isValidBirthDate } from "@/lib/utils/age"
-
 export default function EditClientPage() {
   const router = useRouter()
   const params = useParams()

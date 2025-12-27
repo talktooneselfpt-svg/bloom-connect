@@ -1,6 +1,7 @@
 import { doc, setDoc, serverTimestamp, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Staff } from '@/types/staff';
+import { generateStaffNumber } from '@/lib/utils/idGenerator';
 
 /**
  * 職員データを Firestore に保存
@@ -13,8 +14,20 @@ export async function createStaff(
 ): Promise<void> {
   const staffRef = doc(db, 'staff', staffId);
 
+  // 職員番号が提供されていない場合は自動生成
+  let staffNumber = data.staffNumber
+  if (!staffNumber) {
+    // 一意性を確保するまで生成を繰り返す
+    let isUnique = false
+    while (!isUnique) {
+      staffNumber = generateStaffNumber()
+      isUnique = await isStaffNumberAvailable(staffNumber, data.organizationId)
+    }
+  }
+
   await setDoc(staffRef, {
     ...data,
+    staffNumber,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -51,6 +64,17 @@ export async function updateStaff(
     ...data,
     updatedAt: serverTimestamp(),
   });
+}
+
+/**
+ * すべての職員一覧を取得
+ * @returns 職員データの配列
+ */
+export async function getAllStaff(): Promise<Staff[]> {
+  const staffCollection = collection(db, 'staff');
+  const querySnapshot = await getDocs(staffCollection);
+
+  return querySnapshot.docs.map(doc => doc.data() as Staff);
 }
 
 /**
@@ -103,4 +127,27 @@ export async function retireStaff(
     retireDate,
     updatedBy,
   });
+}
+
+/**
+ * 職員番号の重複チェック（組織内で一意性確認）
+ * @param staffNumber チェックする職員番号
+ * @param organizationId 組織ID
+ * @returns 使用可能な場合true
+ */
+export async function isStaffNumberAvailable(
+  staffNumber: string,
+  organizationId: string
+): Promise<boolean> {
+  if (!db) return true // ビルド時は常にtrueを返す
+
+  const staffCollection = collection(db, 'staff')
+  const q = query(
+    staffCollection,
+    where('organizationId', '==', organizationId),
+    where('staffNumber', '==', staffNumber)
+  )
+  const querySnapshot = await getDocs(q)
+
+  return querySnapshot.empty
 }

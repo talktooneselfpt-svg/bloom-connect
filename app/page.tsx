@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { getAllStaff } from "@/lib/firestore/staff"
-import { getAllClients } from "@/lib/firestore/clients"
-import { getAllOrganizations } from "@/lib/firestore/organizations"
+import { db } from "@/lib/firebase"
+import { collection, query, where, getCountFromServer } from "firebase/firestore"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -25,19 +24,31 @@ export default function DashboardPage() {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
-      const [staff, clients, organizations] = await Promise.all([
-        getAllStaff(),
-        getAllClients(),
-        getAllOrganizations()
+
+      // カウントのみを取得（全データを読み込まないため高速）
+      const [
+        staffCount,
+        activeStaffCount,
+        clientCount,
+        activeClientCount,
+        orgCount,
+        activeOrgCount
+      ] = await Promise.all([
+        getCountFromServer(collection(db, 'staff')),
+        getCountFromServer(query(collection(db, 'staff'), where('isActive', '==', true))),
+        getCountFromServer(collection(db, 'clients')),
+        getCountFromServer(query(collection(db, 'clients'), where('isActive', '==', true))),
+        getCountFromServer(collection(db, 'organizations')),
+        getCountFromServer(query(collection(db, 'organizations'), where('isActive', '==', true)))
       ])
 
       setStats({
-        staffCount: staff.length,
-        clientCount: clients.length,
-        organizationCount: organizations.length,
-        activeStaffCount: staff.filter(s => s.isActive).length,
-        activeClientCount: clients.filter(c => c.isActive).length,
-        activeOrganizationCount: organizations.filter(o => o.isActive).length
+        staffCount: staffCount.data().count,
+        clientCount: clientCount.data().count,
+        organizationCount: orgCount.data().count,
+        activeStaffCount: activeStaffCount.data().count,
+        activeClientCount: activeClientCount.data().count,
+        activeOrganizationCount: activeOrgCount.data().count
       })
     } catch (err) {
       console.error("データの取得に失敗しました:", err)
@@ -48,8 +59,23 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">読み込み中...</div>
+      <div className="min-h-screen bg-gray-50">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* スケルトンローディング */}
+          <div className="mb-8 animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-64"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-24 mb-4"></div>
+                <div className="h-10 bg-gray-200 rounded w-16 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-32"></div>
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
     )
   }

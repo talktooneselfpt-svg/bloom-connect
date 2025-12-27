@@ -30,6 +30,8 @@ export interface Staff {
   email: string;
   /** 在職状態 */
   isActive: boolean;
+  /** パスワード設定完了フラグ（初回ログイン時のパスワード設定が完了しているか） */
+  passwordSetupCompleted: boolean;
   /** 入社日（任意） */
   hireDate?: string;
   /** 退職日（任意） */
@@ -109,11 +111,11 @@ export const POSITIONS = [
  * 権限ロールの選択肢
  */
 export const ROLES = [
-  'admin',
-  'manager',
-  'leader',
-  'staff',
-  'viewer',
+  '管理者',
+  'マネージャー',
+  'リーダー',
+  'スタッフ',
+  'ビューアー',
 ] as const;
 
 /**
