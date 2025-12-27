@@ -14,6 +14,8 @@ export interface Staff {
   nameKana: string;
   /** 職種 */
   jobType: string;
+  /** 職種がその他の場合の自由記載（任意） */
+  jobTypeOther?: string;
   /** 役職 */
   position: string;
   /** 権限ロール */
@@ -108,14 +110,11 @@ export const POSITIONS = [
 ] as const;
 
 /**
- * 権限ロールの選択肢
+ * 権限ロールの選択肢（管理者権限の有無のみ）
  */
 export const ROLES = [
   '管理者',
-  'マネージャー',
-  'リーダー',
-  'スタッフ',
-  'ビューアー',
+  '一般職員',
 ] as const;
 
 /**

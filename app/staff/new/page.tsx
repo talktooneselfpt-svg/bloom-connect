@@ -19,6 +19,7 @@ export default function NewStaffPage() {
     nameKanji: '',
     nameKana: '',
     jobType: '',
+    jobTypeOther: '',
     position: '',
     role: '',
     department: '',
@@ -100,6 +101,9 @@ export default function NewStaffPage() {
       }
 
       // 任意フィールドが入力されている場合のみ追加
+      if (formData.jobTypeOther?.trim()) {
+        staffData.jobTypeOther = formData.jobTypeOther.trim()
+      }
       if (formData.department?.trim()) {
         staffData.department = formData.department.trim()
       }
@@ -278,6 +282,25 @@ export default function NewStaffPage() {
                 ))}
               </select>
             </div>
+
+            {/* 職種その他（自由記載） */}
+            {formData.jobType === 'その他（自由記載）' && (
+              <div>
+                <label htmlFor="jobTypeOther" className="block text-sm font-medium text-gray-700 mb-1">
+                  職種の詳細を入力してください <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="jobTypeOther"
+                  name="jobTypeOther"
+                  value={formData.jobTypeOther}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                  placeholder="例: 調理師"
+                />
+              </div>
+            )}
 
             {/* 役職 */}
             <div>

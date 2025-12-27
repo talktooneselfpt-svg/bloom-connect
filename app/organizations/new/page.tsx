@@ -24,6 +24,7 @@ export default function NewOrganizationPage() {
     phone: "",
     email: "",
     organizationType: "",
+    organizationTypeOther: "",
     administratorName: "",
     administratorEmail: "",
     logoUrl: "",
@@ -101,6 +102,9 @@ export default function NewOrganizationPage() {
       }
 
       // 任意フィールドの処理
+      if (formData.organizationTypeOther?.trim()) {
+        organizationData.organizationTypeOther = formData.organizationTypeOther.trim()
+      }
       if (formData.nameKana?.trim()) {
         organizationData.nameKana = formData.nameKana.trim()
       }
@@ -266,6 +270,25 @@ export default function NewOrganizationPage() {
                     ))}
                   </select>
                 </div>
+
+                {/* 事業所種別その他（自由記載） */}
+                {formData.organizationType === 'その他' && (
+                  <div>
+                    <label htmlFor="organizationTypeOther" className="block text-sm font-medium text-gray-700 mb-1">
+                      事業所種別の詳細を入力してください <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="organizationTypeOther"
+                      name="organizationTypeOther"
+                      value={formData.organizationTypeOther}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                      placeholder="例: 配食サービス"
+                    />
+                  </div>
+                )}
               </div>
             </section>
 

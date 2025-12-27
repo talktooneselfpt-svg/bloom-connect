@@ -32,6 +32,7 @@ export interface Organization {
 
   // 事業所種別・特性
   organizationType: string // 事業所種別（訪問看護、訪問介護等）
+  organizationTypeOther?: string // 事業所種別がその他の場合の自由記載（任意）
   services?: string[] // 提供サービス一覧
 
   // 管理者情報
