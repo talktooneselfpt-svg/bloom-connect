@@ -16,6 +16,7 @@ import {
   AUDIT_ACTION_COLORS,
 } from '@/types/audit-log'
 import { getAuditLogs, calculateAuditLogStats, formatAuditLogsForExport } from '@/lib/firestore/audit-logs'
+import { exportToCSV, exportToHTML, printData } from '@/lib/utils/export'
 import { Timestamp } from 'firebase/firestore'
 
 // サンプルデータ（実装時にFirestoreから取得）
@@ -261,15 +262,44 @@ export default function AuditLogsPage() {
   }
 
   const handleExportCSV = () => {
-    // TODO: CSVエクスポート機能を実装
     const exportData = formatAuditLogsForExport(filteredLogs as AuditLog[])
-    console.log('CSV Export:', exportData)
-    alert('CSV エクスポート機能は準備中です')
+    const timestamp = new Date().toISOString().split('T')[0]
+    exportToCSV(exportData, `監査ログ_${timestamp}`, {
+      '日時': '日時',
+      '操作者': '操作者',
+      'アクション': 'アクション',
+      'リソース種別': 'リソース種別',
+      'リソース名': 'リソース名',
+      'IPアドレス': 'IPアドレス',
+      '変更内容': '変更内容',
+    })
   }
 
-  const handleExportPDF = () => {
-    // TODO: PDFエクスポート機能を実装
-    alert('PDF エクスポート機能は準備中です')
+  const handleExportHTML = () => {
+    const exportData = formatAuditLogsForExport(filteredLogs as AuditLog[])
+    const timestamp = new Date().toISOString().split('T')[0]
+    exportToHTML(exportData, `監査ログ_${timestamp}`, '監査ログ・アクティビティログ', {
+      '日時': '日時',
+      '操作者': '操作者',
+      'アクション': 'アクション',
+      'リソース種別': 'リソース種別',
+      'リソース名': 'リソース名',
+      'IPアドレス': 'IPアドレス',
+      '変更内容': '変更内容',
+    })
+  }
+
+  const handlePrint = () => {
+    const exportData = formatAuditLogsForExport(filteredLogs as AuditLog[])
+    printData(exportData, '監査ログ・アクティビティログ', {
+      '日時': '日時',
+      '操作者': '操作者',
+      'アクション': 'アクション',
+      'リソース種別': 'リソース種別',
+      'リソース名': 'リソース名',
+      'IPアドレス': 'IPアドレス',
+      '変更内容': '変更内容',
+    })
   }
 
   return (
@@ -430,7 +460,7 @@ export default function AuditLogsPage() {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <button
               onClick={handleResetFilters}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
@@ -439,15 +469,30 @@ export default function AuditLogsPage() {
             </button>
             <button
               onClick={handleExportCSV}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
             >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
               CSV エクスポート
             </button>
             <button
-              onClick={handleExportPDF}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              onClick={handleExportHTML}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2"
             >
-              PDF エクスポート
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              HTML エクスポート
+            </button>
+            <button
+              onClick={handlePrint}
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              印刷
             </button>
           </div>
         </div>

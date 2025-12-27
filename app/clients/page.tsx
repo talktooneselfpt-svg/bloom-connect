@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { getClientsByOrganization } from "@/lib/firestore/clients"
 import { Client, CARE_LEVELS } from "@/types/client"
 import { calculateAge } from "@/lib/utils/age"
+import { exportToCSV, exportToHTML, printData, formatClientsForExport } from "@/lib/utils/export"
 
 export default function ClientsPage() {
   const router = useRouter()
@@ -32,6 +33,57 @@ export default function ClientsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // エクスポート処理
+  const handleExportCSV = () => {
+    const exportData = formatClientsForExport(filteredClients)
+    const timestamp = new Date().toISOString().split('T')[0]
+    exportToCSV(exportData, `利用者一覧_${timestamp}`, {
+      '利用者番号': '利用者番号',
+      '氏名（漢字）': '氏名（漢字）',
+      '氏名（カナ）': '氏名（カナ）',
+      '生年月日': '生年月日',
+      '性別': '性別',
+      '電話番号': '電話番号',
+      '住所': '住所',
+      '緊急連絡先': '緊急連絡先',
+      '状態': '状態',
+      '登録日': '登録日',
+    })
+  }
+
+  const handleExportHTML = () => {
+    const exportData = formatClientsForExport(filteredClients)
+    const timestamp = new Date().toISOString().split('T')[0]
+    exportToHTML(exportData, `利用者一覧_${timestamp}`, '利用者一覧', {
+      '利用者番号': '利用者番号',
+      '氏名（漢字）': '氏名（漢字）',
+      '氏名（カナ）': '氏名（カナ）',
+      '生年月日': '生年月日',
+      '性別': '性別',
+      '電話番号': '電話番号',
+      '住所': '住所',
+      '緊急連絡先': '緊急連絡先',
+      '状態': '状態',
+      '登録日': '登録日',
+    })
+  }
+
+  const handlePrint = () => {
+    const exportData = formatClientsForExport(filteredClients)
+    printData(exportData, '利用者一覧', {
+      '利用者番号': '利用者番号',
+      '氏名（漢字）': '氏名（漢字）',
+      '氏名（カナ）': '氏名（カナ）',
+      '生年月日': '生年月日',
+      '性別': '性別',
+      '電話番号': '電話番号',
+      '住所': '住所',
+      '緊急連絡先': '緊急連絡先',
+      '状態': '状態',
+      '登録日': '登録日',
+    })
   }
 
   // フィルタリング・検索ロジック
@@ -78,23 +130,54 @@ export default function ClientsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">利用者一覧</h1>
-          <div className="flex gap-2">
-            <button
-              onClick={() => router.push("/clients/import")}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              CSVインポート
-            </button>
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold text-gray-900">利用者一覧</h1>
             <button
               onClick={() => router.push("/clients/new")}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             >
               新規登録
+            </button>
+          </div>
+
+          {/* エクスポートボタン群 */}
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={handleExportCSV}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              CSV エクスポート
+            </button>
+            <button
+              onClick={handleExportHTML}
+              className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              HTML エクスポート
+            </button>
+            <button
+              onClick={handlePrint}
+              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              印刷
+            </button>
+            <button
+              onClick={() => router.push("/clients/import")}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              CSV インポート
             </button>
           </div>
         </div>

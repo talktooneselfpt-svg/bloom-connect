@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getStaffByOrganization, retireStaff } from '@/lib/firestore/staff';
 import { Staff, ROLES } from '@/types/staff';
+import { exportToCSV, exportToHTML, printData, formatStaffForExport } from '@/lib/utils/export';
 
 export default function StaffListPage() {
   const router = useRouter();
@@ -49,6 +50,54 @@ export default function StaffListPage() {
       alert('退職処理に失敗しました');
       console.error(err);
     }
+  };
+
+  // エクスポート処理
+  const handleExportCSV = () => {
+    const exportData = formatStaffForExport(filteredStaff);
+    const timestamp = new Date().toISOString().split('T')[0];
+    exportToCSV(exportData, `職員一覧_${timestamp}`, {
+      '職員番号': '職員番号',
+      '氏名（漢字）': '氏名（漢字）',
+      '氏名（カナ）': '氏名（カナ）',
+      'メールアドレス': 'メールアドレス',
+      '電話番号': '電話番号',
+      '職種': '職種',
+      '役割': '役割',
+      '状態': '状態',
+      '登録日': '登録日',
+    });
+  };
+
+  const handleExportHTML = () => {
+    const exportData = formatStaffForExport(filteredStaff);
+    const timestamp = new Date().toISOString().split('T')[0];
+    exportToHTML(exportData, `職員一覧_${timestamp}`, '職員一覧', {
+      '職員番号': '職員番号',
+      '氏名（漢字）': '氏名（漢字）',
+      '氏名（カナ）': '氏名（カナ）',
+      'メールアドレス': 'メールアドレス',
+      '電話番号': '電話番号',
+      '職種': '職種',
+      '役割': '役割',
+      '状態': '状態',
+      '登録日': '登録日',
+    });
+  };
+
+  const handlePrint = () => {
+    const exportData = formatStaffForExport(filteredStaff);
+    printData(exportData, '職員一覧', {
+      '職員番号': '職員番号',
+      '氏名（漢字）': '氏名（漢字）',
+      '氏名（カナ）': '氏名（カナ）',
+      'メールアドレス': 'メールアドレス',
+      '電話番号': '電話番号',
+      '職種': '職種',
+      '役割': '役割',
+      '状態': '状態',
+      '登録日': '登録日',
+    });
   };
 
   // 検索・フィルタリング処理
@@ -104,23 +153,54 @@ export default function StaffListPage() {
         <div className="bg-white rounded-lg shadow-md">
           {/* ヘッダー */}
           <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-gray-900">職員一覧</h1>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => router.push('/staff/import')}
-                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  CSVインポート
-                </button>
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-bold text-gray-900">職員一覧</h1>
                 <button
                   onClick={() => router.push('/staff/new')}
                   className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                 >
                   + 新規登録
+                </button>
+              </div>
+
+              {/* エクスポートボタン群 */}
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={handleExportCSV}
+                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  CSV エクスポート
+                </button>
+                <button
+                  onClick={handleExportHTML}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  HTML エクスポート
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  印刷
+                </button>
+                <button
+                  onClick={() => router.push('/staff/import')}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  CSV インポート
                 </button>
               </div>
             </div>
