@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { db } from "@/lib/firebase"
 import { collection, query, where, getCountFromServer } from "firebase/firestore"
+import { Notification, SAMPLE_NOTIFICATIONS, getPriorityColor } from "@/types/notification"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -21,8 +22,13 @@ export default function DashboardPage() {
   const [deviceMode, setDeviceMode] = useState<'parent' | 'child'>('child')
   const [userRole, setUserRole] = useState<string>('') // ユーザーの権限ロール
 
+  // 通知の状態管理
+  const [notifications, setNotifications] = useState<Partial<Notification>[]>([])
+  const [showAllNotifications, setShowAllNotifications] = useState(false)
+
   useEffect(() => {
     loadDashboardData()
+    loadNotifications()
     // TODO: 実際のログインユーザーの権限を取得
     // 仮で管理者権限を設定（実装時は実際の認証情報から取得）
     setUserRole('管理者')
@@ -33,6 +39,38 @@ export default function DashboardPage() {
       setDeviceMode(savedMode)
     }
   }, [])
+
+  const loadNotifications = async () => {
+    // TODO: Firestoreから通知を取得
+    // 仮でサンプルデータを使用
+    setNotifications(SAMPLE_NOTIFICATIONS)
+  }
+
+  const handleMarkAsRead = (notificationId: string) => {
+    // TODO: Firestoreで既読状態を更新
+    setNotifications(prev =>
+      prev.map(notif =>
+        notif.id === notificationId ? { ...notif, isRead: true } : notif
+      )
+    )
+  }
+
+  const handleMarkAllAsRead = (type: 'organization' | 'system') => {
+    // TODO: Firestoreで既読状態を更新
+    setNotifications(prev =>
+      prev.map(notif =>
+        notif.type === type ? { ...notif, isRead: true } : notif
+      )
+    )
+  }
+
+  // 通知を種類別に分類
+  const organizationNotifications = notifications.filter(n => n.type === 'organization')
+  const systemNotifications = notifications.filter(n => n.type === 'system')
+
+  // 未読数を計算
+  const unreadOrganizationCount = organizationNotifications.filter(n => !n.isRead).length
+  const unreadSystemCount = systemNotifications.filter(n => !n.isRead).length
 
   const isAdminOrManager = userRole === '管理者' || userRole === 'マネージャー'
 
@@ -219,6 +257,199 @@ export default function DashboardPage() {
             >
               事業所一覧を見る
             </button>
+          </div>
+        </div>
+
+        {/* 通知セクション */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* 事業所からの通知 */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-900">事業所からの通知</h3>
+                {unreadOrganizationCount > 0 && (
+                  <span className="bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    {unreadOrganizationCount}
+                  </span>
+                )}
+              </div>
+              {unreadOrganizationCount > 0 && (
+                <button
+                  onClick={() => handleMarkAllAsRead('organization')}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  すべて既読
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {organizationNotifications.length === 0 ? (
+                <p className="text-center text-gray-500 py-8 text-sm">通知はありません</p>
+              ) : (
+                organizationNotifications.slice(0, showAllNotifications ? undefined : 3).map((notif) => (
+                  <div
+                    key={notif.id}
+                    className={`border rounded-lg p-4 transition-all ${
+                      notif.isRead ? 'bg-gray-50 border-gray-200' : 'bg-blue-50 border-blue-200'
+                    } ${notif.isPinned ? 'border-l-4 border-l-yellow-500' : ''}`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start gap-2 flex-1">
+                        {notif.isPinned && (
+                          <svg className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L11 4.323V3a1 1 0 011-1h-2zM11 5.06V5.06l-.546.219-1.29-.51L6.774 6.89a1 1 0 00-.494.892c0 .193.048.381.139.547l.817 1.546 2.54 1.52a1 1 0 001.516-.813l.095-.475-1.328-2.515a1 1 0 00-.896-.514H8v-1h1.172c.276 0 .527.112.707.293zM10 17a2 2 0 100-4 2 2 0 000 4z" />
+                          </svg>
+                        )}
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm mb-1">{notif.title}</h4>
+                          <p className="text-sm text-gray-700 mb-2">{notif.message}</p>
+                          {notif.senderName && (
+                            <p className="text-xs text-gray-500">送信者: {notif.senderName}</p>
+                          )}
+                        </div>
+                      </div>
+                      {!notif.isRead && (
+                        <button
+                          onClick={() => handleMarkAsRead(notif.id!)}
+                          className="text-blue-600 hover:text-blue-800 ml-2"
+                          title="既読にする"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    {notif.link && (
+                      <button
+                        onClick={() => router.push(notif.link!)}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {notif.linkText || '詳細を見る'} →
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {organizationNotifications.length > 3 && !showAllNotifications && (
+              <button
+                onClick={() => setShowAllNotifications(true)}
+                className="w-full mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                すべて表示 ({organizationNotifications.length}件)
+              </button>
+            )}
+          </div>
+
+          {/* 運営からの通知 */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-900">運営からの通知</h3>
+                {unreadSystemCount > 0 && (
+                  <span className="bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    {unreadSystemCount}
+                  </span>
+                )}
+              </div>
+              {unreadSystemCount > 0 && (
+                <button
+                  onClick={() => handleMarkAllAsRead('system')}
+                  className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+                >
+                  すべて既読
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {systemNotifications.length === 0 ? (
+                <p className="text-center text-gray-500 py-8 text-sm">通知はありません</p>
+              ) : (
+                systemNotifications.slice(0, showAllNotifications ? undefined : 3).map((notif) => {
+                  const priorityColor = getPriorityColor(notif.priority!)
+                  const borderColor = {
+                    red: 'border-red-200',
+                    orange: 'border-orange-200',
+                    blue: 'border-blue-200',
+                    gray: 'border-gray-200'
+                  }[priorityColor]
+
+                  const bgColor = {
+                    red: 'bg-red-50',
+                    orange: 'bg-orange-50',
+                    blue: 'bg-blue-50',
+                    gray: 'bg-gray-50'
+                  }[priorityColor]
+
+                  return (
+                    <div
+                      key={notif.id}
+                      className={`border rounded-lg p-4 transition-all ${
+                        notif.isRead ? 'bg-gray-50 border-gray-200' : `${bgColor} ${borderColor}`
+                      } ${notif.isPinned ? 'border-l-4 border-l-yellow-500' : ''}`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-start gap-2 flex-1">
+                          {notif.isPinned && (
+                            <svg className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L11 4.323V3a1 1 0 011-1h-2zM11 5.06V5.06l-.546.219-1.29-.51L6.774 6.89a1 1 0 00-.494.892c0 .193.048.381.139.547l.817 1.546 2.54 1.52a1 1 0 001.516-.813l.095-.475-1.328-2.515a1 1 0 00-.896-.514H8v-1h1.172c.276 0 .527.112.707.293zM10 17a2 2 0 100-4 2 2 0 000 4z" />
+                            </svg>
+                          )}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900 text-sm">{notif.title}</h4>
+                              {notif.priority === 'urgent' && (
+                                <span className="bg-red-600 text-white text-xs font-semibold px-2 py-0.5 rounded">
+                                  重要
+                                </span>
+                              )}
+                              {notif.priority === 'high' && (
+                                <span className="bg-orange-600 text-white text-xs font-semibold px-2 py-0.5 rounded">
+                                  優先
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-700 mb-2">{notif.message}</p>
+                          </div>
+                        </div>
+                        {!notif.isRead && (
+                          <button
+                            onClick={() => handleMarkAsRead(notif.id!)}
+                            className="text-purple-600 hover:text-purple-800 ml-2"
+                            title="既読にする"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      {notif.link && (
+                        <button
+                          onClick={() => router.push(notif.link!)}
+                          className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+                        >
+                          {notif.linkText || '詳細を見る'} →
+                        </button>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+
+            {systemNotifications.length > 3 && !showAllNotifications && (
+              <button
+                onClick={() => setShowAllNotifications(true)}
+                className="w-full mt-4 text-sm text-purple-600 hover:text-purple-800 font-medium"
+              >
+                すべて表示 ({systemNotifications.length}件)
+              </button>
+            )}
           </div>
         </div>
 
