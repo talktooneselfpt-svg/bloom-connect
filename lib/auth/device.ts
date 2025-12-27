@@ -95,7 +95,7 @@ export async function registerBiometric(
     const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
       challenge,
       rp: {
-        name: 'Bloom Connect',
+        name: 'ブルームコネクト',
         id: window.location.hostname,
       },
       user: {

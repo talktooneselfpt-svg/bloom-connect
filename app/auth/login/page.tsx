@@ -175,8 +175,7 @@ export default function LoginPage() {
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         {/* ロゴ・タイトル */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Bloom Connect</h1>
-          <p className="text-gray-600">職員管理システム</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">ブルームコネクト</h1>
         </div>
 
         {error && (

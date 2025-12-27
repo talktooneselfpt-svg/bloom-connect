@@ -17,9 +17,32 @@ export default function DashboardPage() {
     activeOrganizationCount: 0
   })
 
+  // 親機/子機モードの状態管理
+  const [deviceMode, setDeviceMode] = useState<'parent' | 'child'>('child')
+  const [userRole, setUserRole] = useState<string>('') // ユーザーの権限ロール
+
   useEffect(() => {
     loadDashboardData()
+    // TODO: 実際のログインユーザーの権限を取得
+    // 仮で管理者権限を設定（実装時は実際の認証情報から取得）
+    setUserRole('管理者')
+
+    // localStorageから前回のモード設定を復元
+    const savedMode = localStorage.getItem('deviceMode') as 'parent' | 'child'
+    if (savedMode) {
+      setDeviceMode(savedMode)
+    }
   }, [])
+
+  const isAdminOrManager = userRole === '管理者' || userRole === 'マネージャー'
+
+  const handleModeToggle = () => {
+    if (!isAdminOrManager) return // 管理者・マネージャー以外は切り替え不可
+
+    const newMode = deviceMode === 'parent' ? 'child' : 'parent'
+    setDeviceMode(newMode)
+    localStorage.setItem('deviceMode', newMode)
+  }
 
   const loadDashboardData = async () => {
     try {
@@ -83,10 +106,36 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* ようこそメッセージ */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">ダッシュボード</h2>
-          <p className="text-gray-600">システムの概要と主要機能へのアクセス</p>
+        {/* ヘッダーとトグルスイッチ */}
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">ダッシュボード</h2>
+            <p className="text-gray-600">システムの概要と主要機能へのアクセス</p>
+          </div>
+
+          {/* 親機/子機トグルスイッチ */}
+          <div className="flex items-center gap-3 bg-white rounded-lg shadow-md px-4 py-3">
+            <span className={`text-sm font-medium ${deviceMode === 'child' ? 'text-gray-900' : 'text-gray-400'}`}>
+              子機
+            </span>
+            <button
+              onClick={handleModeToggle}
+              disabled={!isAdminOrManager}
+              className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                deviceMode === 'parent' ? 'bg-blue-600' : 'bg-gray-300'
+              } ${!isAdminOrManager ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              title={!isAdminOrManager ? '管理者権限が必要です' : ''}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                  deviceMode === 'parent' ? 'translate-x-8' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span className={`text-sm font-medium ${deviceMode === 'parent' ? 'text-gray-900' : 'text-gray-400'}`}>
+              親機
+            </span>
+          </div>
         </div>
 
         {/* 統計カード */}
@@ -173,10 +222,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* クイックアクション */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">クイックアクション</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* クイックアクション - 親機モードのみ表示 */}
+        {deviceMode === 'parent' && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">クイックアクション</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => router.push("/staff/new")}
               className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
@@ -206,6 +256,7 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+        )}
 
         {/* 主要機能へのアクセス */}
         <div className="bg-white rounded-lg shadow-md p-6">
