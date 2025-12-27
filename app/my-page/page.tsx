@@ -324,7 +324,28 @@ export default function MyPage() {
           </div>
 
           {/* 右側: 料金サマリー */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
+            {/* プロフィール設定へのリンク */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">アカウント管理</h2>
+              <div className="space-y-2">
+                <Link
+                  href="/profile"
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="text-gray-900 font-medium">プロフィール設定</span>
+                  </div>
+                  <svg className="w-5 h-5 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">今月の料金</h2>
 
