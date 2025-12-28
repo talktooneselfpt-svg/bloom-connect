@@ -51,7 +51,7 @@ export async function createNotification(
       isRead: false,
       isArchived: false,
       isPinned: false,
-      expiresAt: input.expiresAt,
+      expiresAt: input.expiresAt ? Timestamp.fromDate(input.expiresAt) : undefined,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     }
