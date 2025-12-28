@@ -4,7 +4,7 @@ import { useState, useEffect, FormEvent } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { getDevice, updateDevice } from '@/lib/firestore/devices'
-import { getStaffByOrganization } from '@/lib/firestore/staff'
+import { getActiveStaff } from '@/lib/firestore/staff'
 import { DEVICE_TYPE_LABELS } from '@/types/device'
 import { Device } from '@/types/device'
 import { Staff } from '@/types/staff'
@@ -40,7 +40,7 @@ export default function EditDevicePage() {
       setLoading(true)
       const [deviceData, staffData] = await Promise.all([
         getDevice(deviceId),
-        getStaffByOrganization(organizationId, true),
+        getActiveStaff(organizationId),
       ])
 
       if (!deviceData) {

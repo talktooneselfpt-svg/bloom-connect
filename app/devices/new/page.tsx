@@ -4,7 +4,7 @@ import { useState, useEffect, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createDevice } from '@/lib/firestore/devices'
-import { getStaffByOrganization } from '@/lib/firestore/staff'
+import { getActiveStaff } from '@/lib/firestore/staff'
 import { DEVICE_TYPE_LABELS } from '@/types/device'
 import { Staff } from '@/types/staff'
 
@@ -31,7 +31,7 @@ export default function NewDevicePage() {
   const loadStaff = async () => {
     try {
       // 有効な職員のみ取得
-      const staffData = await getStaffByOrganization(organizationId, true)
+      const staffData = await getActiveStaff(organizationId)
       setStaff(staffData)
     } catch (error) {
       console.error('職員の取得に失敗しました:', error)
