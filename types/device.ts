@@ -16,7 +16,13 @@ export interface Device {
   maxStaff: number // 最大職員数（デフォルト3）
   isActive: boolean // デバイス有効状態
   description?: string // 備考
-  serialNumber?: string // シリアル番号（オプション）
+  serialNumber?: string // シリアル番号（オプション・旧方式）
+
+  // デバイス識別情報（トークン方式）
+  deviceToken?: string // デバイス固有トークン（UUID）- デバイス識別の主キー
+  registrationIP?: string // 登録時のIPアドレス（参考情報）
+  lastAccessIP?: string // 最終アクセスIP（参考情報）
+  lastAccessAt?: Timestamp // 最終アクセス日時
 
   // メタ情報
   createdAt: Timestamp

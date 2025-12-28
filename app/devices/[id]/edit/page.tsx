@@ -339,6 +339,28 @@ export default function EditDevicePage() {
               <span className="font-medium">更新日時:</span>{' '}
               {device.updatedAt?.toDate().toLocaleString('ja-JP')}
             </div>
+            {device.deviceToken && (
+              <div className="col-span-2">
+                <span className="font-medium">デバイストークン:</span>{' '}
+                <span className="font-mono text-xs">{device.deviceToken}</span>
+              </div>
+            )}
+            {device.registrationIP && (
+              <div>
+                <span className="font-medium">登録時IP:</span> {device.registrationIP}
+              </div>
+            )}
+            {device.lastAccessIP && (
+              <div>
+                <span className="font-medium">最終アクセスIP:</span> {device.lastAccessIP}
+              </div>
+            )}
+            {device.lastAccessAt && (
+              <div className="col-span-2">
+                <span className="font-medium">最終アクセス日時:</span>{' '}
+                {device.lastAccessAt.toDate().toLocaleString('ja-JP')}
+              </div>
+            )}
           </div>
         </div>
       </div>

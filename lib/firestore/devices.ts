@@ -22,6 +22,17 @@ import { Device, CreateDeviceInput, UpdateDeviceInput } from '@/types/device'
 const DEVICES_COLLECTION = 'devices'
 
 /**
+ * UUIDv4を生成（デバイストークン用）
+ */
+function generateDeviceToken(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
+/**
  * デバイスを作成
  */
 export async function createDevice(
@@ -246,4 +257,89 @@ export async function calculateDeviceStats(
     devicesAtCapacity,
     devicesWithSpace,
   }
+}
+
+/**
+ * 招待コードを使用してデバイスを登録
+ * デバイストークンとIPアドレスを自動取得して保存
+ */
+export async function registerDeviceWithInvitation(
+  organizationId: string,
+  staffId: string,
+  deviceName: string,
+  deviceType: 'tablet' | 'smartphone' | 'pc' | 'other',
+  registrationIP?: string
+): Promise<string> {
+  const deviceToken = generateDeviceToken()
+
+  const deviceData: Omit<Device, 'id'> = {
+    organizationId,
+    deviceName,
+    deviceType,
+    assignedStaffIds: [staffId], // 招待された職員を自動割り当て
+    maxStaff: 3,
+    isActive: true,
+    deviceToken,
+    registrationIP,
+    lastAccessIP: registrationIP,
+    lastAccessAt: serverTimestamp() as Timestamp,
+    createdAt: serverTimestamp() as Timestamp,
+    updatedAt: serverTimestamp() as Timestamp,
+    createdBy: staffId,
+    updatedBy: staffId,
+  }
+
+  const docRef = await addDoc(collection(db, DEVICES_COLLECTION), deviceData)
+
+  // デバイストークンをlocalStorageに保存（クライアント側で実行）
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('deviceToken', deviceToken)
+    localStorage.setItem('deviceId', docRef.id)
+  }
+
+  return docRef.id
+}
+
+/**
+ * デバイストークンでデバイスを取得
+ */
+export async function getDeviceByToken(
+  deviceToken: string
+): Promise<Device | null> {
+  const q = query(
+    collection(db, DEVICES_COLLECTION),
+    where('deviceToken', '==', deviceToken)
+  )
+
+  const querySnapshot = await getDocs(q)
+
+  if (querySnapshot.empty) {
+    return null
+  }
+
+  const doc = querySnapshot.docs[0]
+  return {
+    id: doc.id,
+    ...doc.data(),
+  } as Device
+}
+
+/**
+ * デバイスの最終アクセス情報を更新
+ */
+export async function updateDeviceAccess(
+  deviceId: string,
+  accessIP?: string
+): Promise<void> {
+  const docRef = doc(db, DEVICES_COLLECTION, deviceId)
+
+  const updateData: any = {
+    lastAccessAt: serverTimestamp(),
+  }
+
+  if (accessIP) {
+    updateData.lastAccessIP = accessIP
+  }
+
+  await updateDoc(docRef, updateData)
 }
