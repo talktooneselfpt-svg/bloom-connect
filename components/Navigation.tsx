@@ -1,7 +1,9 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
+import { getAppsWithSubscription } from "@/lib/firestore/apps"
+import type { AppWithSubscription } from "@/types/app"
 
 interface NavItem {
   name: string
@@ -9,10 +11,81 @@ interface NavItem {
   icon: React.ReactElement
 }
 
+/**
+ * アイコン名からSVGアイコンを返す
+ */
+function getIconByName(iconName: string): React.ReactElement {
+  const icons: Record<string, React.ReactElement> = {
+    users: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    ),
+    calendar: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    chart: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    clipboard: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+    clock: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    briefcase: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    ),
+    document: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+    chat: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+    ),
+  }
+
+  return icons[iconName] || icons['document'] // デフォルトアイコン
+}
+
 export default function Navigation() {
   const router = useRouter()
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [apps, setApps] = useState<AppWithSubscription[]>([])
+  const [loadingApps, setLoadingApps] = useState(true)
+
+  // TODO: 実際のログイン組織IDを取得
+  const organizationId = 'test-org-001'
+
+  useEffect(() => {
+    loadApps()
+  }, [])
+
+  const loadApps = async () => {
+    try {
+      setLoadingApps(true)
+      const appsData = await getAppsWithSubscription(organizationId)
+      setApps(appsData)
+    } catch (error) {
+      console.error('アプリの取得に失敗しました:', error)
+    } finally {
+      setLoadingApps(false)
+    }
+  }
 
   const navItems: NavItem[] = [
     {
@@ -143,7 +216,7 @@ export default function Navigation() {
         className={`
           fixed top-0 left-0 h-full bg-white shadow-lg z-40 transition-transform duration-300 ease-in-out
           ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-          w-64
+          w-64 overflow-y-auto
         `}
       >
         {/* ヘッダー */}
@@ -151,7 +224,7 @@ export default function Navigation() {
           <h1 className="text-xl font-bold text-gray-900">ブルームコネクト</h1>
         </div>
 
-        {/* ナビゲーション項目 */}
+        {/* メインナビゲーション */}
         <div className="p-4 space-y-2">
           {navItems.map((item) => (
             <button
@@ -175,8 +248,91 @@ export default function Navigation() {
           ))}
         </div>
 
+        {/* アプリ一覧セクション */}
+        <div className="mt-6 border-t border-gray-200">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                アプリ
+              </h2>
+              <button
+                onClick={() => {
+                  router.push('/apps')
+                  setIsMobileMenuOpen(false)
+                }}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+
+            {loadingApps ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-10 bg-gray-200 rounded-lg"></div>
+                  </div>
+                ))}
+              </div>
+            ) : apps.length === 0 ? (
+              <p className="text-xs text-gray-500 text-center py-4">
+                利用可能なアプリがありません
+              </p>
+            ) : (
+              <div className="space-y-1">
+                {apps.filter(app => app.isPurchased).map((app) => (
+                  <button
+                    key={app.id}
+                    onClick={() => {
+                      router.push(`/apps/${app.id}`)
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className={`
+                      w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
+                      ${
+                        isActive(`/apps/${app.id}`)
+                          ? "bg-green-50 text-green-700"
+                          : "text-gray-600 hover:bg-gray-50"
+                      }
+                    `}
+                  >
+                    {getIconByName(app.icon)}
+                    <span className="text-sm">{app.name}</span>
+                  </button>
+                ))}
+
+                {apps.filter(app => !app.isPurchased).length > 0 && (
+                  <>
+                    <div className="pt-2 mt-2 border-t border-gray-100">
+                      <p className="text-xs text-gray-500 mb-2 px-3">未購入</p>
+                      {apps.filter(app => !app.isPurchased).slice(0, 3).map((app) => (
+                        <button
+                          key={app.id}
+                          onClick={() => {
+                            router.push(`/apps/${app.id}`)
+                            setIsMobileMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors"
+                        >
+                          {getIconByName(app.icon)}
+                          <span className="text-sm">{app.name}</span>
+                          <svg className="w-3 h-3 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* フッター */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
           <p className="text-xs text-gray-500 text-center">
             © 2025 ブルームコネクト
           </p>
