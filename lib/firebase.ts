@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app"
 import { getFirestore, Firestore } from "firebase/firestore"
 import { getAuth, Auth } from "firebase/auth"
+import { getStorage, FirebaseStorage } from "firebase/storage"
 
 // ビルド時の環境変数チェック
 const isConfigured =
@@ -20,17 +21,20 @@ const firebaseConfig = {
 let app: FirebaseApp
 let db: Firestore
 let auth: Auth
+let storage: FirebaseStorage
 
 if (typeof window !== 'undefined' || isConfigured) {
   // クライアントサイドまたは環境変数が設定されている場合
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
   db = getFirestore(app)
   auth = getAuth(app)
+  storage = getStorage(app)
 } else {
   // ビルド時のダミーオブジェクト（実際には使用されない）
   app = {} as FirebaseApp
   db = {} as Firestore
   auth = {} as Auth
+  storage = {} as FirebaseStorage
 }
 
-export { app, db, auth }
+export { app, db, auth, storage }

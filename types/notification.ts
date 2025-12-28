@@ -110,6 +110,111 @@ export interface NotificationSettings {
 }
 
 /**
+ * 通知作成用の入力データ
+ */
+export interface CreateNotificationInput {
+  type: NotificationType
+  category: NotificationCategory
+  priority: NotificationPriority
+  title: string
+  message: string
+  link?: string
+  linkText?: string
+  organizationId?: string
+  senderId?: string
+  senderName?: string
+  targetUserIds?: string[]
+  targetRoles?: string[]
+  expiresAt?: Date
+}
+
+/**
+ * 通知タイプのラベル
+ */
+export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
+  organization: '事業所',
+  system: '運営',
+}
+
+/**
+ * 通知カテゴリーのラベル
+ */
+export const NOTIFICATION_CATEGORY_LABELS: Record<NotificationCategory, string> = {
+  announcement: 'お知らせ',
+  update: 'アップデート',
+  maintenance: 'メンテナンス',
+  alert: '警告',
+  info: '情報',
+  reminder: 'リマインダー',
+}
+
+/**
+ * 通知優先度のラベル
+ */
+export const NOTIFICATION_PRIORITY_LABELS: Record<NotificationPriority, string> = {
+  low: '低',
+  normal: '通常',
+  high: '高',
+  urgent: '緊急',
+}
+
+/**
+ * 通知カテゴリーの色（Tailwind CSS）
+ */
+export const NOTIFICATION_CATEGORY_COLORS: Record<NotificationCategory, { bg: string; text: string }> = {
+  announcement: {
+    bg: 'bg-blue-100',
+    text: 'text-blue-800',
+  },
+  update: {
+    bg: 'bg-purple-100',
+    text: 'text-purple-800',
+  },
+  maintenance: {
+    bg: 'bg-yellow-100',
+    text: 'text-yellow-800',
+  },
+  alert: {
+    bg: 'bg-red-100',
+    text: 'text-red-800',
+  },
+  info: {
+    bg: 'bg-gray-100',
+    text: 'text-gray-800',
+  },
+  reminder: {
+    bg: 'bg-green-100',
+    text: 'text-green-800',
+  },
+}
+
+/**
+ * 通知優先度の色（Tailwind CSS）
+ */
+export const NOTIFICATION_PRIORITY_COLORS: Record<NotificationPriority, { bg: string; text: string; border: string }> = {
+  low: {
+    bg: 'bg-gray-50',
+    text: 'text-gray-600',
+    border: 'border-gray-200',
+  },
+  normal: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-600',
+    border: 'border-blue-200',
+  },
+  high: {
+    bg: 'bg-orange-50',
+    text: 'text-orange-600',
+    border: 'border-orange-200',
+  },
+  urgent: {
+    bg: 'bg-red-50',
+    text: 'text-red-600',
+    border: 'border-red-200',
+  },
+}
+
+/**
  * 通知のサンプルデータ
  */
 export const SAMPLE_NOTIFICATIONS: Partial<Notification>[] = [
