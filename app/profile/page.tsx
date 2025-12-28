@@ -95,7 +95,7 @@ export default function ProfilePage() {
       setAvatarUrl(downloadUrl)
 
       // Firestoreのスタッフ情報を更新
-      await updateStaff(currentUserId, { photoUrl: downloadUrl }, currentUserId)
+      await updateStaff(currentUserId, { photoUrl: downloadUrl })
 
       alert('プロフィール画像を更新しました')
     } catch (error) {
@@ -132,8 +132,7 @@ export default function ProfilePage() {
           nameKana: formData.nameKana.trim(),
           email: formData.email.trim() || undefined,
           phonePersonal: formData.phonePersonal.trim() || undefined,
-        },
-        currentUserId
+        }
       )
 
       alert('プロフィールを更新しました')
