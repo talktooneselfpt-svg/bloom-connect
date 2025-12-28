@@ -384,11 +384,11 @@ export default function CreateNotificationPage() {
                 </label>
                 <div className="max-h-64 overflow-y-auto space-y-2">
                   {staffList.map((staff) => (
-                    <label key={staff.id} className="flex items-center cursor-pointer">
+                    <label key={staff.uid} className="flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={formData.targetUserIds.includes(staff.id)}
-                        onChange={() => handleUserToggle(staff.id)}
+                        checked={formData.targetUserIds.includes(staff.uid)}
+                        onChange={() => handleUserToggle(staff.uid)}
                         className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       />
                       <span className="ml-2 text-gray-900">
