@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import dynamic from "next/dynamic";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 // ナビゲーションを動的にインポート（初期ロードを高速化）
 const Navigation = dynamic(() => import("@/components/Navigation"), {
@@ -45,6 +46,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <ServiceWorkerRegister />
         <Navigation />
         <div className="lg:ml-64">
           {children}

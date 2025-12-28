@@ -1,0 +1,34 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景グラデーション -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 背景円 -->
+  <rect width="180" height="180" rx="40" fill="url(#grad)"/>
+
+  <!-- 花のアイコン（ブルーム） -->
+  <g transform="translate(90, 90)">
+    <!-- 中心の円 -->
+    <circle cx="0" cy="0" r="14" fill="#fbbf24"/>
+
+    <!-- 花びら（5枚） -->
+    <!-- 上 -->
+    <ellipse cx="0" cy="-32" rx="18" ry="25" fill="#ffffff" opacity="0.95"/>
+    <!-- 右上 -->
+    <ellipse cx="30" cy="-10" rx="18" ry="25" fill="#ffffff" opacity="0.95" transform="rotate(72 30 -10)"/>
+    <!-- 右下 -->
+    <ellipse cx="19" cy="25" rx="18" ry="25" fill="#ffffff" opacity="0.95" transform="rotate(144 19 25)"/>
+    <!-- 左下 -->
+    <ellipse cx="-19" cy="25" rx="18" ry="25" fill="#ffffff" opacity="0.95" transform="rotate(216 -19 25)"/>
+    <!-- 左上 -->
+    <ellipse cx="-30" cy="-10" rx="18" ry="25" fill="#ffffff" opacity="0.95" transform="rotate(288 -30 -10)"/>
+
+    <!-- 接続線（コネクト） -->
+    <line x1="-21" y1="-28" x2="21" y2="28" stroke="#60a5fa" stroke-width="3" opacity="0.7"/>
+    <line x1="-21" y1="28" x2="21" y2="-28" stroke="#60a5fa" stroke-width="3" opacity="0.7"/>
+  </g>
+</svg>
