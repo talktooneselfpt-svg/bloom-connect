@@ -52,8 +52,8 @@ export default function ProfilePage() {
       })
 
       // アバター画像がある場合は取得
-      if (staffData.avatarUrl) {
-        setAvatarUrl(staffData.avatarUrl)
+      if (staffData.photoUrl) {
+        setAvatarUrl(staffData.photoUrl)
       }
     } catch (error) {
       console.error('プロフィールの取得に失敗しました:', error)
@@ -95,7 +95,7 @@ export default function ProfilePage() {
       setAvatarUrl(downloadUrl)
 
       // Firestoreのスタッフ情報を更新
-      await updateStaff(currentUserId, { avatarUrl: downloadUrl }, currentUserId)
+      await updateStaff(currentUserId, { photoUrl: downloadUrl }, currentUserId)
 
       alert('プロフィール画像を更新しました')
     } catch (error) {
