@@ -1,3 +1,7 @@
+export function generateStaticParams() {
+  return []
+}
+
 'use client';
 
 import { useState, useEffect } from 'react';
