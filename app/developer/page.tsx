@@ -16,6 +16,15 @@ export default function DeveloperDashboard() {
   const [featureFlags, setFeatureFlags] = useState<FeatureFlag[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [creating, setCreating] = useState(false)
+
+  // フォーム状態
+  const [formData, setFormData] = useState({
+    key: '',
+    name: '',
+    description: '',
+    stage: 'development' as FeatureStage,
+  })
 
   // TODO: 実際のユーザー情報を取得
   const currentUserId = 'dev-user-001'
@@ -56,6 +65,45 @@ export default function DeveloperDashboard() {
       alert('ステージを変更しました')
     } catch (error) {
       alert('ステージの変更に失敗しました')
+    }
+  }
+
+  const handleCreateFeature = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.key || !formData.name || !formData.description) {
+      alert('すべての項目を入力してください')
+      return
+    }
+
+    setCreating(true)
+    try {
+      await createFeatureFlag(
+        {
+          key: formData.key,
+          name: formData.name,
+          description: formData.description,
+          stage: formData.stage,
+        },
+        currentUserId
+      )
+
+      // フォームをリセット
+      setFormData({
+        key: '',
+        name: '',
+        description: '',
+        stage: 'development',
+      })
+
+      setShowCreateModal(false)
+      await loadFeatureFlags()
+      alert('機能フラグを作成しました')
+    } catch (error) {
+      console.error('機能フラグの作成に失敗しました:', error)
+      alert('機能フラグの作成に失敗しました')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -235,6 +283,106 @@ export default function DeveloperDashboard() {
             </div>
           </div>
         </div>
+
+        {/* 新規機能フラグ作成モーダル */}
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">新規機能フラグを作成</h2>
+              </div>
+
+              <form onSubmit={handleCreateFeature} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    機能キー <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.key}
+                    onChange={(e) => setFormData({ ...formData, key: e.target.value })}
+                    placeholder="例: advanced_search"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    英数字とアンダースコアのみ使用可能
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    機能名 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="例: 高度な検索機能"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    説明 <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="機能の詳しい説明を入力してください"
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    初期ステージ
+                  </label>
+                  <select
+                    value={formData.stage}
+                    onChange={(e) => setFormData({ ...formData, stage: e.target.value as FeatureStage })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="development">開発中</option>
+                    <option value="staging">テスト中</option>
+                    <option value="production">本番</option>
+                    <option value="disabled">無効</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCreateModal(false)
+                      setFormData({
+                        key: '',
+                        name: '',
+                        description: '',
+                        stage: 'development',
+                      })
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                    disabled={creating}
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                    disabled={creating}
+                  >
+                    {creating ? '作成中...' : '作成'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
