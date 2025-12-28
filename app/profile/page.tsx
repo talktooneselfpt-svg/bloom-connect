@@ -22,7 +22,7 @@ export default function ProfilePage() {
     nameKanji: '',
     nameKana: '',
     email: '',
-    phoneNumber: '',
+    phonePersonal: '',
   })
 
   // TODO: 実際のログインユーザーIDを取得
@@ -48,7 +48,7 @@ export default function ProfilePage() {
         nameKanji: staffData.nameKanji,
         nameKana: staffData.nameKana,
         email: staffData.email || '',
-        phoneNumber: staffData.phoneNumber || '',
+        phonePersonal: staffData.phonePersonal || '',
       })
 
       // アバター画像がある場合は取得
@@ -131,7 +131,7 @@ export default function ProfilePage() {
           nameKanji: formData.nameKanji.trim(),
           nameKana: formData.nameKana.trim(),
           email: formData.email.trim() || undefined,
-          phoneNumber: formData.phoneNumber.trim() || undefined,
+          phonePersonal: formData.phonePersonal.trim() || undefined,
         },
         currentUserId
       )
@@ -302,14 +302,14 @@ export default function ProfilePage() {
 
             {/* 電話番号 */}
             <div>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                電話番号
+              <label htmlFor="phonePersonal" className="block text-sm font-medium text-gray-700 mb-1">
+                電話番号（個人用）
               </label>
               <input
                 type="tel"
-                id="phoneNumber"
-                name="phoneNumber"
-                value={formData.phoneNumber}
+                id="phonePersonal"
+                name="phonePersonal"
+                value={formData.phonePersonal}
                 onChange={handleChange}
                 placeholder="090-1234-5678"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
