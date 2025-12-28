@@ -1,8 +1,5 @@
 'use client'
 
-export function generateStaticParams() {
-  return []
-}
 
 'use client';
 
