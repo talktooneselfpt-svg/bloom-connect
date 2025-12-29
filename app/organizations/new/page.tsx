@@ -25,7 +25,6 @@ export default function NewOrganizationPage() {
     organizationType: "",
     administratorName: "",
     administratorEmail: "",
-    logoUrl: "",
     termsAgreed: false
   })
 
@@ -111,9 +110,6 @@ export default function NewOrganizationPage() {
       }
       if (formData.administratorEmail?.trim()) {
         organizationData.administratorEmail = formData.administratorEmail.trim()
-      }
-      if (formData.logoUrl?.trim()) {
-        organizationData.logoUrl = formData.logoUrl.trim()
       }
 
       // 規約同意情報
@@ -421,33 +417,6 @@ export default function NewOrganizationPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                     placeholder="例: admin@example.com"
                   />
-                </div>
-              </div>
-            </section>
-
-            {/* ブランディングセクション */}
-            <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
-                ブランディング
-              </h2>
-              <div className="space-y-4">
-                {/* ロゴURL */}
-                <div>
-                  <label htmlFor="logoUrl" className="block text-sm font-medium text-gray-700 mb-1">
-                    ロゴ画像URL
-                  </label>
-                  <input
-                    type="url"
-                    id="logoUrl"
-                    name="logoUrl"
-                    value={formData.logoUrl}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                    placeholder="例: https://example.com/logo.png"
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    画像アップロード機能は後日実装予定
-                  </p>
                 </div>
               </div>
             </section>

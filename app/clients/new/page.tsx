@@ -77,12 +77,6 @@ export default function NewClientPage() {
       if (!formData.livingArrangement) {
         throw new Error("居住形態は必須項目です")
       }
-      if (!formData.emergencyContact) {
-        throw new Error("緊急連絡先は必須項目です")
-      }
-      if (!formData.swallowingStatus) {
-        throw new Error("嚥下状態は必須項目です")
-      }
 
       // 仮のデータ（実際にはログインユーザー情報を使用）
       const currentUserId = "temp-user-id" // TODO: 実際のユーザーIDに置き換え
@@ -522,7 +516,7 @@ export default function NewClientPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="emergencyContact" className="block text-sm font-medium text-gray-700 mb-1">
-                      緊急連絡先 <span className="text-red-500">*</span>
+                      緊急連絡先
                     </label>
                     <input
                       type="text"
@@ -530,7 +524,6 @@ export default function NewClientPage() {
                       name="emergencyContact"
                       value={formData.emergencyContact}
                       onChange={handleChange}
-                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                       placeholder="090-XXXX-XXXX"
                     />
@@ -569,14 +562,13 @@ export default function NewClientPage() {
                 {/* 嚥下状態 */}
                 <div>
                   <label htmlFor="swallowingStatus" className="block text-sm font-medium text-gray-700 mb-1">
-                    嚥下状態 <span className="text-red-500">*</span>
+                    嚥下状態
                   </label>
                   <select
                     id="swallowingStatus"
                     name="swallowingStatus"
                     value={formData.swallowingStatus}
                     onChange={handleChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   >
                     <option value="">選択してください</option>
