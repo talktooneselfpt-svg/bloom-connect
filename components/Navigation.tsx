@@ -20,15 +20,6 @@ export default function Navigation() {
   // メイン機能（全ユーザー共通）
   const mainItems: NavItem[] = [
     {
-      name: "ダッシュボード",
-      path: "/",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      )
-    },
-    {
       name: "アプリ",
       path: "/app",
       icon: (
@@ -43,6 +34,24 @@ export default function Navigation() {
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+        </svg>
+      )
+    },
+    {
+      name: "メッセージ",
+      path: "/messages",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      )
+    },
+    {
+      name: "通知",
+      path: "/notifications",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
       )
     }
@@ -85,38 +94,20 @@ export default function Navigation() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       )
+    },
+    {
+      name: "マイページ",
+      path: "/mypage",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      )
     }
   ]
 
-  // 共通機能
-  const commonItems: NavItem[] = [
-    {
-      name: "スケジュール",
-      path: "/schedule",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    {
-      name: "メッセージ",
-      path: "/messages",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    {
-      name: "通知",
-      path: "/notifications",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-      )
-    },
+  // 設定・ヘルプ
+  const settingsItems: NavItem[] = [
     {
       name: "設定",
       path: "/settings",
@@ -138,16 +129,9 @@ export default function Navigation() {
     }
   ]
 
-  // 表示する全ナビゲーション項目を構築
-  const navItems = [
-    ...mainItems,
-    ...(isParentDevice ? adminItems : []),
-    ...commonItems
-  ]
-
   const isActive = (path: string) => {
-    if (path === "/") {
-      return pathname === "/"
+    if (path === "/app") {
+      return pathname === "/app" || pathname === "/"
     }
     return pathname.startsWith(path)
   }
@@ -186,8 +170,7 @@ export default function Navigation() {
       >
         {/* ヘッダー */}
         <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">Bloom Connect</h1>
-          <p className="text-xs text-gray-600 mt-1">スタッフ管理システム</p>
+          <h1 className="text-xl font-bold text-gray-900">ブルームコネクト</h1>
         </div>
 
         {/* ナビゲーション項目 */}
@@ -219,7 +202,7 @@ export default function Navigation() {
             <>
               <div className="pt-4 pb-2">
                 <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  管理機能（親機）
+                  管理
                 </p>
               </div>
               {adminItems.map((item) => (
@@ -245,13 +228,8 @@ export default function Navigation() {
             </>
           )}
 
-          {/* 共通機能セクション */}
-          <div className="pt-4 pb-2">
-            <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              その他
-            </p>
-          </div>
-          {commonItems.map((item) => (
+          {/* 設定・ヘルプ */}
+          {settingsItems.map((item) => (
             <button
               key={item.path}
               onClick={() => {
@@ -259,7 +237,7 @@ export default function Navigation() {
                 setIsMobileMenuOpen(false)
               }}
               className={`
-                w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mt-4
                 ${
                   isActive(item.path)
                     ? "bg-blue-50 text-blue-700 font-medium"

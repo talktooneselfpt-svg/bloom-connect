@@ -8,8 +8,8 @@ export default function AppPage() {
       <div className="max-w-7xl mx-auto">
         {/* ヘッダー */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">アプリ</h1>
-          <p className="text-gray-600">業務支援アプリケーション</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">アプリ一覧</h1>
+          <p className="text-gray-600">利用可能なアプリケーション</p>
         </div>
 
         {/* アプリグリッド */}
