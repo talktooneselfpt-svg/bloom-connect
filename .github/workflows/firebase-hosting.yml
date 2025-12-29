@@ -3,7 +3,7 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - claude/staff-data-foundation-72iE4
+      - claude/cleanup-forms-exports-OEgyO
 
 jobs:
   build_and_deploy:
