@@ -5,9 +5,14 @@ import Providers from "./providers";
 import dynamic from "next/dynamic";
 
 // ナビゲーションを動的にインポート（初期ロードを高速化）
-const Navigation = dynamic(() => import("@/components/Navigation"), {
+const ConditionalNavigation = dynamic(() => import("@/components/ConditionalNavigation"), {
   ssr: true,
-  loading: () => <div className="h-16 bg-white border-b border-gray-200" />
+  loading: () => null
+});
+
+const ConditionalLayout = dynamic(() => import("@/components/ConditionalLayout"), {
+  ssr: true,
+  loading: () => null
 });
 
 const geistSans = Geist({
@@ -47,10 +52,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <Navigation />
-          <div className="lg:ml-64">
+          <ConditionalNavigation />
+          <ConditionalLayout>
             {children}
-          </div>
+          </ConditionalLayout>
         </Providers>
       </body>
     </html>
