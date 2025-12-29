@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createStaffWithAuth } from '@/lib/auth/staff';
-import { JOB_TYPES, POSITIONS, ROLES, EMPLOYMENT_TYPES } from '@/types/staff';
+import { JOB_TYPES, JOB_CATEGORIES, POSITIONS, ROLES, EMPLOYMENT_TYPES } from '@/types/staff';
 import { generateStaffEmail } from '@/lib/utils/email';
 import { generateTemporaryPassword } from '@/lib/utils/idGenerator';
 
@@ -18,7 +18,7 @@ export default function NewStaffPage() {
     staffNumber: '',
     nameKanji: '',
     nameKana: '',
-    jobType: '',
+    jobTypes: [] as string[],
     position: '',
     role: '',
     department: '',
@@ -38,6 +38,15 @@ export default function NewStaffPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleJobTypeChange = (jobType: string) => {
+    setFormData(prev => ({
+      ...prev,
+      jobTypes: prev.jobTypes.includes(jobType)
+        ? prev.jobTypes.filter(j => j !== jobType)
+        : [...prev.jobTypes, jobType]
+    }));
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -51,8 +60,8 @@ export default function NewStaffPage() {
       if (!formData.nameKanji || !formData.nameKana) {
         throw new Error('氏名は必須項目です');
       }
-      if (!formData.jobType) {
-        throw new Error('職種は必須項目です');
+      if (formData.jobTypes.length === 0) {
+        throw new Error('職種は少なくとも1つ選択してください');
       }
       if (!formData.position) {
         throw new Error('役職は必須項目です');
@@ -82,7 +91,7 @@ export default function NewStaffPage() {
         staffNumber: formData.staffNumber,
         nameKanji: formData.nameKanji,
         nameKana: formData.nameKana,
-        jobType: formData.jobType,
+        jobTypes: formData.jobTypes,
         position: formData.position,
         role: formData.role,
         phoneCompany: formData.phoneCompany,
@@ -251,26 +260,61 @@ export default function NewStaffPage() {
               />
             </div>
 
-            {/* 職種 */}
-            <div>
-              <label htmlFor="jobType" className="block text-sm font-medium text-gray-700 mb-1">
-                職種 <span className="text-red-500">*</span>
+            {/* 職種（複数選択） */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                職種（複数選択可） <span className="text-red-500">*</span>
               </label>
-              <select
-                id="jobType"
-                name="jobType"
-                value={formData.jobType}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-              >
-                <option value="">選択してください</option>
-                {JOB_TYPES.map(jobType => (
-                  <option key={jobType} value={jobType}>
-                    {jobType}
-                  </option>
+              <p className="text-xs text-gray-500 mb-3">該当する職種・資格をすべて選択してください</p>
+              <div className="max-h-96 overflow-y-auto border border-gray-300 rounded-md p-4 bg-gray-50">
+                {Object.entries(JOB_CATEGORIES).map(([category, jobs]) => (
+                  <div key={category} className="mb-4 last:mb-0">
+                    <h4 className="font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-300">
+                      {category}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                      {jobs.map(job => (
+                        <label
+                          key={job}
+                          className="flex items-center space-x-2 hover:bg-white p-1 rounded cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.jobTypes.includes(job)}
+                            onChange={() => handleJobTypeChange(job)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700">{job}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 ))}
-              </select>
+              </div>
+              {formData.jobTypes.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600">
+                    選択中: <span className="font-medium text-blue-600">{formData.jobTypes.length}件</span>
+                  </p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {formData.jobTypes.map(job => (
+                      <span
+                        key={job}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                      >
+                        {job}
+                        <button
+                          type="button"
+                          onClick={() => handleJobTypeChange(job)}
+                          className="hover:text-blue-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 役職 */}

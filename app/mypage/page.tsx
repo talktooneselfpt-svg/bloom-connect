@@ -16,11 +16,11 @@ export default function MyPage() {
 
         {/* タブナビゲーション */}
         <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
+          <div className="border-b border-gray-200 overflow-x-auto">
+            <nav className="flex -mb-px min-w-max sm:min-w-0">
               <button
                 onClick={() => setActiveTab('overview')}
-                className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
+                className={`py-3 px-4 sm:py-4 sm:px-6 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'overview'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -30,7 +30,7 @@ export default function MyPage() {
               </button>
               <button
                 onClick={() => setActiveTab('reports')}
-                className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
+                className={`py-3 px-4 sm:py-4 sm:px-6 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'reports'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -40,7 +40,7 @@ export default function MyPage() {
               </button>
               <button
                 onClick={() => setActiveTab('billing')}
-                className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
+                className={`py-3 px-4 sm:py-4 sm:px-6 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'billing'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -50,7 +50,7 @@ export default function MyPage() {
               </button>
               <button
                 onClick={() => setActiveTab('plan')}
-                className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
+                className={`py-3 px-4 sm:py-4 sm:px-6 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'plan'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -73,7 +73,7 @@ export default function MyPage() {
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600">契約プラン</p>
-                    <p className="text-lg font-medium text-gray-900 mt-1">スタンダードプラン</p>
+                    <p className="text-lg font-medium text-gray-900 mt-1">サブスクプラン</p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600">登録スタッフ数</p>
@@ -136,7 +136,7 @@ export default function MyPage() {
                 {/* 請求履歴 */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">請求履歴</h3>
-                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
@@ -182,23 +182,48 @@ export default function MyPage() {
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-gray-900">プラン変更</h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* ベーシックプラン */}
+                {/* 料金体系の説明 */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-900 mb-2">料金体系について</h3>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• 基本料金: ¥2,000/月（登録職員20人以下）</li>
+                    <li>• 登録職員20人以上: 10人ごとに¥1,000追加</li>
+                    <li>• プロダクト毎の料金が加算されます</li>
+                  </ul>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* デモプラン */}
                   <div className="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors">
-                    <h3 className="text-lg font-semibold text-gray-900">ベーシック</h3>
-                    <p className="text-3xl font-bold text-gray-900 mt-4">¥5,000<span className="text-sm font-normal text-gray-600">/月</span></p>
+                    <h3 className="text-lg font-semibold text-gray-900">デモプラン</h3>
+                    <p className="text-3xl font-bold text-gray-900 mt-4">¥0<span className="text-sm font-normal text-gray-600">/月</span></p>
+                    <div className="mt-2">
+                      <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">新規ユーザー向け</span>
+                    </div>
                     <ul className="mt-6 space-y-3">
                       <li className="flex items-start gap-2">
                         <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-sm text-gray-600">スタッフ5名まで</span>
+                        <span className="text-sm text-gray-600">スタッフ3名まで</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-sm text-gray-600">基本アプリ利用</span>
+                        <span className="text-sm text-gray-600">基本機能のお試し</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-sm text-gray-600">30日間</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <span className="text-sm text-gray-400">プロダクト利用不可</span>
                       </li>
                     </ul>
                     <button className="mt-6 w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
@@ -206,54 +231,40 @@ export default function MyPage() {
                     </button>
                   </div>
 
-                  {/* スタンダードプラン（現在のプラン） */}
+                  {/* サブスクプラン（現在のプラン） */}
                   <div className="border-2 border-blue-500 rounded-lg p-6 relative">
                     <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-3 py-1 rounded-bl-lg rounded-tr-lg">
                       現在のプラン
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900">スタンダード</h3>
-                    <p className="text-3xl font-bold text-gray-900 mt-4">¥12,000<span className="text-sm font-normal text-gray-600">/月</span></p>
+                    <h3 className="text-lg font-semibold text-gray-900">サブスクプラン</h3>
+                    <div className="mt-4">
+                      <p className="text-2xl font-bold text-gray-900">基本料金: ¥2,000<span className="text-sm font-normal text-gray-600">/月</span></p>
+                      <p className="text-sm text-gray-600 mt-1">+ プロダクト料金</p>
+                    </div>
                     <ul className="mt-6 space-y-3">
                       <li className="flex items-start gap-2">
                         <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-sm text-gray-600">スタッフ20名まで</span>
+                        <span className="text-sm text-gray-600">スタッフ20名まで基本料金内</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-sm text-gray-600">全アプリ利用可能</span>
+                        <span className="text-sm text-gray-600">20名以上は10人毎に+¥1,000</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-sm text-gray-600">レポート機能</span>
-                      </li>
-                    </ul>
-                    <button className="mt-6 w-full bg-blue-500 text-white py-2 px-4 rounded-lg cursor-not-allowed opacity-50">
-                      利用中
-                    </button>
-                  </div>
-
-                  {/* プレミアムプラン */}
-                  <div className="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors">
-                    <h3 className="text-lg font-semibold text-gray-900">プレミアム</h3>
-                    <p className="text-3xl font-bold text-gray-900 mt-4">¥25,000<span className="text-sm font-normal text-gray-600">/月</span></p>
-                    <ul className="mt-6 space-y-3">
-                      <li className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-sm text-gray-600">スタッフ無制限</span>
+                        <span className="text-sm text-gray-600">全プロダクト利用可能</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-sm text-gray-600">全機能利用可能</span>
+                        <span className="text-sm text-gray-600">レポート・分析機能</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,9 +273,18 @@ export default function MyPage() {
                         <span className="text-sm text-gray-600">優先サポート</span>
                       </li>
                     </ul>
-                    <button className="mt-6 w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
-                      選択
+                    <button className="mt-6 w-full bg-blue-500 text-white py-2 px-4 rounded-lg cursor-not-allowed opacity-50">
+                      利用中
                     </button>
+                  </div>
+                </div>
+
+                {/* プロダクト選択セクション */}
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">利用プロダクト</h3>
+                  <p className="text-sm text-gray-600 mb-4">各プロダクトを選択して、必要な機能をご利用いただけます。</p>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm text-gray-700">※ プロダクト一覧と料金は開発中です</p>
                   </div>
                 </div>
               </div>

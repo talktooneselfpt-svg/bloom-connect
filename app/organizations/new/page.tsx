@@ -3,7 +3,7 @@
 import { useState, FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { createOrganization, isOrganizationCodeAvailable } from "@/lib/firestore/organizations"
-import { ORGANIZATION_TYPES, PREFECTURES } from "@/types/organization"
+import { ORGANIZATION_TYPES, ORGANIZATION_CATEGORIES, PREFECTURES } from "@/types/organization"
 import { serverTimestamp } from "firebase/firestore"
 
 export default function NewOrganizationPage() {
@@ -235,7 +235,7 @@ export default function NewOrganizationPage() {
                 </div>
 
                 {/* 事業所種別 */}
-                <div>
+                <div className="col-span-2">
                   <label htmlFor="organizationType" className="block text-sm font-medium text-gray-700 mb-1">
                     事業所種別 <span className="text-red-500">*</span>
                   </label>
@@ -248,10 +248,14 @@ export default function NewOrganizationPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   >
                     <option value="">選択してください</option>
-                    {ORGANIZATION_TYPES.map(type => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
+                    {Object.entries(ORGANIZATION_CATEGORIES).map(([category, types]) => (
+                      <optgroup key={category} label={category}>
+                        {types.map(type => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                 </div>
