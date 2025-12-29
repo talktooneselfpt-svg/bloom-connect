@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Providers from "./providers";
 import dynamic from "next/dynamic";
 
 // ナビゲーションを動的にインポート（初期ロードを高速化）
@@ -45,10 +46,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navigation />
-        <div className="lg:ml-64">
-          {children}
-        </div>
+        <Providers>
+          <Navigation />
+          <div className="lg:ml-64">
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );
