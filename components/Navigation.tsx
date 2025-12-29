@@ -275,17 +275,6 @@ export default function Navigation() {
 
         {/* フッター */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-          {/* 開発者モードリンク（デバッグ用） */}
-          <button
-            onClick={() => router.push('/dev')}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 mb-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-sm"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg>
-            <span>開発者画面</span>
-          </button>
-
           <button
             onClick={() => {
               // TODO: ログアウト処理を実装
