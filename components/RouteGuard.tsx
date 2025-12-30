@@ -16,7 +16,7 @@ interface RouteGuardProps {
 export default function RouteGuard({ children, fallback }: RouteGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { role, isAuthenticated, isLoading } = useAuth();
+  const { role, isAuthenticated, isLoading, staff } = useAuth();
 
   useEffect(() => {
     if (isLoading) return;
@@ -31,12 +31,19 @@ export default function RouteGuard({ children, fallback }: RouteGuardProps) {
       return;
     }
 
+    // 初回ログイン時のパスワード変更チェック
+    if (staff && !staff.passwordSetupCompleted && pathname !== '/auth/change-password') {
+      console.log('初回ログイン: パスワード変更ページへリダイレクト');
+      router.push('/auth/change-password');
+      return;
+    }
+
     // ロールベースのアクセス制御
     if (!canAccessPath(role, pathname)) {
       console.warn(`アクセス拒否: ${pathname} (ロール: ${role})`);
       router.push('/home'); // 権限がない場合はホームへリダイレクト
     }
-  }, [isAuthenticated, isLoading, role, pathname, router]);
+  }, [isAuthenticated, isLoading, role, staff, pathname, router]);
 
   // ローディング中
   if (isLoading) {

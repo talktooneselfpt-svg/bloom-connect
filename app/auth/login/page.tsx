@@ -296,6 +296,15 @@ export default function LoginPage() {
               )}
               {isSubmitting ? 'ログイン中...' : 'ログイン'}
             </button>
+
+            <div className="text-center mt-4">
+              <a
+                href="/auth/reset-password"
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                パスワードをお忘れですか？
+              </a>
+            </div>
           </form>
         )}
 
