@@ -52,7 +52,7 @@ export default function EditStaffPage() {
         role: data.role,
         department: data.department || '',
         employmentType: data.employmentType || '',
-        phoneCompany: data.phoneCompany,
+        phoneCompany: data.phoneCompany || '',
         phonePersonal: data.phonePersonal || '',
         email: data.email,
         hireDate: data.hireDate || '',
