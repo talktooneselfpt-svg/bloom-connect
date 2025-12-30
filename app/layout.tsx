@@ -16,7 +16,7 @@ const ConditionalLayout = dynamic(() => import("@/components/ConditionalLayout")
 });
 
 const ServiceWorkerRegister = dynamic(() => import("@/components/ServiceWorkerRegister"), {
-  ssr: false,
+  ssr: true,
   loading: () => null
 });
 
