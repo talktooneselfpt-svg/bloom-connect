@@ -44,28 +44,30 @@ export enum Permission {
   MANAGE_SYSTEM = 'manage_system',
 }
 
+// 管理者のパーミッション
+const adminPermissions: Permission[] = [
+  Permission.VIEW_STAFF,
+  Permission.CREATE_STAFF,
+  Permission.EDIT_STAFF,
+  Permission.DELETE_STAFF,
+  Permission.IMPORT_STAFF,
+  Permission.VIEW_CLIENTS,
+  Permission.CREATE_CLIENTS,
+  Permission.EDIT_CLIENTS,
+  Permission.DELETE_CLIENTS,
+  Permission.IMPORT_CLIENTS,
+  Permission.VIEW_ORGANIZATIONS,
+  Permission.EDIT_ORGANIZATIONS,
+  Permission.VIEW_REPORTS,
+  Permission.EXPORT_REPORTS,
+  Permission.VIEW_MYPAGE,
+  Permission.MANAGE_BILLING,
+  Permission.CHANGE_PLAN,
+];
+
 // ロール別パーミッション
 export const rolePermissions: Record<UserRole, Permission[]> = {
-  [UserRole.ADMIN]: [
-    // 管理者は全機能にアクセス可能
-    Permission.VIEW_STAFF,
-    Permission.CREATE_STAFF,
-    Permission.EDIT_STAFF,
-    Permission.DELETE_STAFF,
-    Permission.IMPORT_STAFF,
-    Permission.VIEW_CLIENTS,
-    Permission.CREATE_CLIENTS,
-    Permission.EDIT_CLIENTS,
-    Permission.DELETE_CLIENTS,
-    Permission.IMPORT_CLIENTS,
-    Permission.VIEW_ORGANIZATIONS,
-    Permission.EDIT_ORGANIZATIONS,
-    Permission.VIEW_REPORTS,
-    Permission.EXPORT_REPORTS,
-    Permission.VIEW_MYPAGE,
-    Permission.MANAGE_BILLING,
-    Permission.CHANGE_PLAN,
-  ],
+  [UserRole.ADMIN]: adminPermissions,
   [UserRole.GENERAL]: [
     // 一般ユーザーは閲覧のみ
     Permission.VIEW_STAFF,
@@ -74,8 +76,8 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     Permission.VIEW_REPORTS,
   ],
   [UserRole.DEVELOPER]: [
-    // 開発者は全てのデータにアクセス可能
-    ...rolePermissions[UserRole.ADMIN],
+    // 開発者は管理者の全権限 + 開発者専用機能
+    ...adminPermissions,
     Permission.ACCESS_DEV_TOOLS,
     Permission.VIEW_ALL_ORGANIZATIONS,
     Permission.MANAGE_SYSTEM,
