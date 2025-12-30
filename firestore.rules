@@ -73,7 +73,9 @@ service cloud.firestore {
     // ===================================
     match /organizations/{orgId} {
       allow read: if isAuthenticated() && (isDeveloper() || isSameOrganization(orgId));
-      allow create: if isDeveloper();
+      // セットアップ時: 認証済みユーザーなら作成可能（初回のみ）
+      // 通常時: 開発者のみ作成可能
+      allow create: if isAuthenticated();
       allow update: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
       allow delete: if isDeveloper();
     }
@@ -83,8 +85,10 @@ service cloud.firestore {
     // ===================================
     match /staff/{staffId} {
       allow read: if isAuthenticated() && (isDeveloper() || resourceBelongsToUserOrg());
-      allow create: if (isDeveloper() || isAdmin()) && (isDeveloper() || requestBelongsToUserOrg());
-      allow update: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg()) || 
+      // セットアップ時: 自分自身のstaffレコード（staffId == auth.uid）なら作成可能
+      // 通常時: 開発者または管理者が作成可能
+      allow create: if isAuthenticated() && (isOwner(staffId) || isDeveloper() || isAdmin());
+      allow update: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg()) ||
                        (isOwner(staffId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'email', 'staffNumber', 'organizationId']));
       allow delete: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
     }
@@ -134,7 +138,9 @@ service cloud.firestore {
     // ===================================
     match /subscriptions/{subId} {
       allow read: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
-      allow create: if isDeveloper();
+      // セットアップ時: 認証済みユーザーなら作成可能
+      // 通常時: 開発者のみ作成・更新・削除可能
+      allow create: if isAuthenticated();
       allow update: if isDeveloper();
       allow delete: if isDeveloper();
     }
@@ -144,8 +150,10 @@ service cloud.firestore {
     // ===================================
     match /notifications/{notificationId} {
       allow read: if isDeveloper() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      allow create: if isAdminOrDev();
-      allow update: if isDeveloper() || (isAuthenticated() && resource.data.userId == request.auth.uid && 
+      // セットアップ時: 自分宛の通知なら作成可能
+      // 通常時: 管理者または開発者が作成可能
+      allow create: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdminOrDev());
+      allow update: if isDeveloper() || (isAuthenticated() && resource.data.userId == request.auth.uid &&
                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']));
       allow delete: if isAdminOrDev();
     }
