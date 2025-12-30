@@ -136,7 +136,7 @@ service cloud.firestore {
     // サブスクリプションコレクション
     // ===================================
     match /subscriptions/{subId} {
-      allow read: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
+      allow read: if isAuthenticated();
       // セットアップ時: 認証済みユーザーなら作成可能
       // 通常時: 開発者のみ作成・更新・削除可能
       allow create: if isAuthenticated();
@@ -160,7 +160,7 @@ service cloud.firestore {
     // ユーザー設定コレクション
     // ===================================
     match /userSettings/{userId} {
-      allow read: if isDeveloper() || isOwner(userId);
+      allow read: if isOwner(userId);
       allow write: if isOwner(userId);
     }
 
