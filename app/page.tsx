@@ -7,8 +7,8 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-    // ログイン後の最初のページとしてアプリ一覧にリダイレクト
-    router.push("/app")
+    // ログイン後の最初のページとしてホームにリダイレクト
+    router.push("/home")
   }, [router])
 
   return (
