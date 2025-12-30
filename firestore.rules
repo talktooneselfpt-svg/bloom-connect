@@ -1,74 +1,70 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ヘルパー関数：ユーザーが認証済みかどうか
-    function isSignedIn() {
-      return request.auth != null;
+
+    // ===================================
+    // テスト用：完全オープン（危険！）
+    // セットアップ完了後、すぐに変更してください
+    // ===================================
+
+    match /organizations/{orgId} {
+      allow read, write: if true;
     }
 
-    // ヘルパー関数：ユーザーのロールを取得
-    function getUserRole() {
-      return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role;
-    }
-
-    // ヘルパー関数：管理者かどうか
-    function isAdmin() {
-      return isSignedIn() && getUserRole() == 'admin';
-    }
-
-    // ヘルパー関数：マネージャー以上かどうか
-    function isManagerOrAbove() {
-      return isSignedIn() && getUserRole() in ['admin', 'manager'];
-    }
-
-    // ヘルパー関数：リーダー以上かどうか
-    function isLeaderOrAbove() {
-      return isSignedIn() && getUserRole() in ['admin', 'manager', 'leader'];
-    }
-
-    // ヘルパー関数：自分自身のデータかどうか
-    function isOwn(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // 職員データ（staff コレクション）
     match /staff/{staffId} {
-      // 読み取り：認証済みユーザーのみ
-      allow read: if isSignedIn();
-
-      // 作成：管理者またはマネージャーのみ
-      allow create: if isManagerOrAbove();
-
-      // 更新：管理者・マネージャー、またはリーダー以上で自分自身のデータの場合
-      allow update: if isManagerOrAbove() ||
-                       (isLeaderOrAbove() && isOwn(staffId));
-
-      // 削除：管理者のみ
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
-    // 組織データ（organizations コレクション）- 将来の拡張用
-    match /organizations/{organizationId} {
-      // 読み取り：認証済みユーザーのみ
-      allow read: if isSignedIn();
-
-      // 書き込み：管理者のみ
-      allow write: if isAdmin();
+    match /subscriptions/{subId} {
+      allow read, write: if true;
     }
 
-    // 利用者データ（clients コレクション）
+    match /notifications/{notificationId} {
+      allow read, write: if true;
+    }
+
+    match /userSettings/{userId} {
+      allow read, write: if true;
+    }
+
     match /clients/{clientId} {
-      // 読み取り：認証済みユーザーのみ
-      allow read: if isSignedIn();
+      allow read, write: if true;
+    }
 
-      // 作成：リーダー以上のみ
-      allow create: if isLeaderOrAbove();
+    match /favoriteApps/{userId} {
+      allow read, write: if true;
+    }
 
-      // 更新：リーダー以上のみ
-      allow update: if isLeaderOrAbove();
+    match /reports/{reportId} {
+      allow read, write: if true;
+    }
 
-      // 削除：管理者のみ
-      allow delete: if isAdmin();
+    match /systemSettings/{settingId} {
+      allow read, write: if true;
+    }
+
+    match /trustedDevices/{deviceId} {
+      allow read, write: if true;
+    }
+
+    match /billing/{billingId} {
+      allow read, write: if false;
+    }
+
+    match /errorLogs/{errorId} {
+      allow read, write: if false;
+    }
+
+    match /systemMetrics/{metricId} {
+      allow read, write: if false;
+    }
+
+    match /auditLogs/{logId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
