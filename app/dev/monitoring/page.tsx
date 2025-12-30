@@ -1,10 +1,36 @@
 "use client"
-import RouteGuard from "@/components/RouteGuard"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import RouteGuard from "@/components/RouteGuard"
+import { getLatestSystemMetrics } from "@/lib/firestore/systemMetrics"
 
 export default function MonitoringPage() {
   const [timeRange, setTimeRange] = useState<"1h" | "24h" | "7d" | "30d">("24h")
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    loadMetrics()
+  }, [])
+
+  const loadMetrics = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const metrics = await getLatestSystemMetrics()
+
+      // データがない場合はデモデータを表示（現在の実装では常にデモデータ）
+      if (metrics.length === 0) {
+        // デモデータは下記で使用
+      }
+    } catch (err) {
+      console.error('メトリクスの取得エラー:', err)
+      setError('メトリクスの取得に失敗しました。デモデータを表示します。')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // TODO: 実際のデータはAPIから取得
   const systemMetrics = {
@@ -77,6 +103,21 @@ export default function MonitoringPage() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-400">読み込み中...</p>
+            </div>
+          </div>
+        </div>
+      </RouteGuard>
+    )
+  }
+
   return (
     <RouteGuard>
     <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
@@ -86,6 +127,12 @@ export default function MonitoringPage() {
           <h1 className="text-3xl font-bold mb-2">システム監視</h1>
           <p className="text-gray-400">リアルタイムシステムヘルスとパフォーマンスモニタリング</p>
         </div>
+
+        {error && (
+          <div className="bg-yellow-500/10 border border-yellow-500 text-yellow-400 px-4 py-3 rounded mb-6">
+            {error}
+          </div>
+        )}
 
         {/* 期間選択 */}
         <div className="mb-6 flex gap-2">
@@ -120,6 +167,12 @@ export default function MonitoringPage() {
             }`}
           >
             30日間
+          </button>
+          <button
+            onClick={loadMetrics}
+            className="ml-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          >
+            更新
           </button>
         </div>
 

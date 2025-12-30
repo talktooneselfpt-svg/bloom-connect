@@ -1,74 +1,112 @@
 "use client"
+
+import { useState, useEffect } from "react"
 import RouteGuard from "@/components/RouteGuard"
-
-import { useState } from "react"
-
-interface ErrorLog {
-  id: string
-  timestamp: string
-  level: "error" | "warning" | "critical"
-  message: string
-  service: string
-  userId?: string
-  organizationId?: string
-  stackTrace?: string
-  resolved: boolean
-}
+import {
+  getAllErrorLogs,
+  resolveErrorLog,
+  ErrorLog
+} from "@/lib/firestore/errorLogs"
+import { Timestamp } from "firebase/firestore"
 
 export default function ErrorsPage() {
   const [filterLevel, setFilterLevel] = useState<string>("all")
   const [filterResolved, setFilterResolved] = useState<string>("unresolved")
   const [selectedError, setSelectedError] = useState<ErrorLog | null>(null)
+  const [errorLogs, setErrorLogs] = useState<ErrorLog[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // TODO: 実際のデータはAPIから取得
-  const errorLogs: ErrorLog[] = [
+  useEffect(() => {
+    loadErrorLogs()
+  }, [])
+
+  const loadErrorLogs = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const logs = await getAllErrorLogs()
+
+      // データがない場合はデモデータを表示
+      if (logs.length === 0) {
+        setErrorLogs(getDemoData())
+      } else {
+        setErrorLogs(logs)
+      }
+    } catch (err) {
+      console.error('エラーログの取得エラー:', err)
+      setError('エラーログの取得に失敗しました。デモデータを表示します。')
+      setErrorLogs(getDemoData())
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // デモデータ
+  const getDemoData = (): ErrorLog[] => [
     {
       id: "err-001",
-      timestamp: "2025-12-29 14:32:15",
+      timestamp: Timestamp.fromDate(new Date("2025-12-29T14:32:15")),
       level: "critical",
       message: "データベース接続タイムアウト",
       service: "API",
       organizationId: "org-005",
       stackTrace: "Error: Connection timeout\n  at Database.connect (db.ts:45)\n  at API.handler (api.ts:123)",
-      resolved: false
+      resolved: false,
+      createdAt: Timestamp.now()
     },
     {
       id: "err-002",
-      timestamp: "2025-12-29 14:15:32",
+      timestamp: Timestamp.fromDate(new Date("2025-12-29T14:15:32")),
       level: "error",
       message: "ファイルアップロード失敗: サイズ制限超過",
       service: "Storage",
       userId: "user-234",
       organizationId: "org-003",
-      resolved: false
+      resolved: false,
+      createdAt: Timestamp.now()
     },
     {
       id: "err-003",
-      timestamp: "2025-12-29 13:45:18",
+      timestamp: Timestamp.fromDate(new Date("2025-12-29T13:45:18")),
       level: "warning",
       message: "API応答遅延: 5秒以上",
       service: "API",
       organizationId: "org-001",
-      resolved: true
+      resolved: true,
+      createdAt: Timestamp.now()
     },
     {
       id: "err-004",
-      timestamp: "2025-12-29 12:22:41",
+      timestamp: Timestamp.fromDate(new Date("2025-12-29T12:22:41")),
       level: "error",
       message: "認証トークン検証エラー",
       service: "Auth",
       userId: "user-456",
-      resolved: true
+      resolved: true,
+      createdAt: Timestamp.now()
     },
     {
       id: "err-005",
-      timestamp: "2025-12-29 11:08:55",
+      timestamp: Timestamp.fromDate(new Date("2025-12-29T11:08:55")),
       level: "warning",
       message: "メモリ使用率80%超過",
       service: "WebApp",
-      resolved: false
+      resolved: false,
+      createdAt: Timestamp.now()
     }
   ]
+
+  const handleResolve = async (errorId: string) => {
+    try {
+      await resolveErrorLog(errorId)
+      await loadErrorLogs()
+    } catch (err) {
+      console.error('エラーログの解決エラー:', err)
+      alert('エラーログの更新に失敗しました')
+    }
+  }
 
   const filteredErrors = errorLogs.filter(error => {
     const levelMatch = filterLevel === "all" || error.level === filterLevel
@@ -97,6 +135,25 @@ export default function ErrorsPage() {
     }
   }
 
+  const formatTimestamp = (timestamp: Timestamp) => {
+    return timestamp.toDate().toLocaleString('ja-JP')
+  }
+
+  if (isLoading) {
+    return (
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-400">読み込み中...</p>
+            </div>
+          </div>
+        </div>
+      </RouteGuard>
+    )
+  }
+
   return (
     <RouteGuard>
     <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
@@ -106,6 +163,12 @@ export default function ErrorsPage() {
           <h1 className="text-3xl font-bold mb-2">エラーログ</h1>
           <p className="text-gray-400">システムエラーと警告の監視</p>
         </div>
+
+        {error && (
+          <div className="bg-yellow-500/10 border border-yellow-500 text-yellow-400 px-4 py-3 rounded mb-6">
+            {error}
+          </div>
+        )}
 
         {/* 統計サマリー */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -164,7 +227,10 @@ export default function ErrorsPage() {
               </select>
             </div>
             <div className="lg:ml-auto flex items-end gap-2">
-              <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+              <button
+                onClick={loadErrorLogs}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              >
                 更新
               </button>
               <button className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">
@@ -199,7 +265,7 @@ export default function ErrorsPage() {
                   <div className="flex items-center gap-4 text-sm text-gray-400">
                     <span>{error.service}</span>
                     <span>•</span>
-                    <span>{error.timestamp}</span>
+                    <span>{formatTimestamp(error.timestamp)}</span>
                     {error.organizationId && (
                       <>
                         <span>•</span>
@@ -235,7 +301,13 @@ export default function ErrorsPage() {
                   </pre>
                   <div className="flex gap-2">
                     {!error.resolved && (
-                      <button className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleResolve(error.id)
+                        }}
+                        className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm"
+                      >
                         解決済みにする
                       </button>
                     )}
