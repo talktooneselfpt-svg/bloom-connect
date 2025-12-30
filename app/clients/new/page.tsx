@@ -12,9 +12,11 @@ import {
 } from "@/types/client"
 import { calculateAge, isValidBirthDate } from "@/lib/utils/age"
 import RouteGuard from "@/components/RouteGuard"
+import { useAuth } from "@/lib/hooks/useAuth"
 
 export default function NewClientPage() {
   const router = useRouter()
+  const { staff: currentStaff, uid } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -79,13 +81,14 @@ export default function NewClientPage() {
         throw new Error("居住形態は必須項目です")
       }
 
-      // 仮のデータ（実際にはログインユーザー情報を使用）
-      const currentUserId = "temp-user-id" // TODO: 実際のユーザーIDに置き換え
-      const organizationId = "temp-org-id" // TODO: 実際の組織IDに置き換え
+      // 認証チェック
+      if (!uid || !currentStaff?.organizationId) {
+        throw new Error("ユーザー情報または組織情報が見つかりません")
+      }
 
       // 任意フィールドの処理
       const clientData: any = {
-        organizationId,
+        organizationId: currentStaff.organizationId,
         nameKanji: formData.nameKanji,
         nameKana: formData.nameKana,
         birthDate: formData.birthDate,
@@ -97,8 +100,8 @@ export default function NewClientPage() {
         hasFallHistory: formData.hasFallHistory,
         swallowingStatus: formData.swallowingStatus,
         isActive: true,
-        createdBy: currentUserId,
-        updatedBy: currentUserId
+        createdBy: uid,
+        updatedBy: uid
       }
 
       // 任意フィールドが入力されている場合のみ追加

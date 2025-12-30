@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { csvToObjects, downloadCSV, objectsToCSV } from '@/lib/utils/csvParser'
 import { createClient } from '@/lib/firestore/clients'
 import RouteGuard from '@/components/RouteGuard'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 interface ClientImportRow {
   clientNumber: string
@@ -40,6 +41,7 @@ interface ImportResult {
 
 export default function ClientImportPage() {
   const router = useRouter()
+  const { staff: currentStaff, uid } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [results, setResults] = useState<ImportResult[]>([])
@@ -122,11 +124,12 @@ export default function ClientImportPage() {
 
     try {
       const data = csvToObjects<ClientImportRow>(csvText)
-      const importResults: ImportResult[] = []
+      // 認証チェック
+      if (!uid || !currentStaff?.organizationId) {
+        throw new Error('ユーザー情報または組織情報が見つかりません')
+      }
 
-      // 仮データ（実際にはログインユーザー情報を使用）
-      const currentUserId = 'temp-user-id'
-      const organizationId = 'temp-org-id'
+      const importResults: ImportResult[] = []
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i]
@@ -143,13 +146,13 @@ export default function ClientImportPage() {
 
           // 利用者データを準備
           const clientData: any = {
-            organizationId,
+            organizationId: currentStaff.organizationId,
             clientNumber: row.clientNumber,
             nameKanji: row.nameKanji,
             nameKana: row.nameKana,
             isActive: true,
-            createdBy: currentUserId,
-            updatedBy: currentUserId,
+            createdBy: uid,
+            updatedBy: uid,
           }
 
           // 任意フィールド

@@ -7,13 +7,17 @@ import { JOB_TYPES, JOB_CATEGORIES, POSITIONS, ROLES, EMPLOYMENT_TYPES } from '@
 import { generateStaffEmail } from '@/lib/utils/email';
 import { generateTemporaryPassword, generateStaffNumber } from '@/lib/utils/idGenerator';
 import RouteGuard from '@/components/RouteGuard';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { getOrganization } from '@/lib/firestore/organizations';
 
 export default function NewStaffPage() {
   const router = useRouter();
+  const { staff: currentStaff, uid } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [temporaryPassword, setTemporaryPassword] = useState<string>('');
+  const [organizationCode, setOrganizationCode] = useState<string>('');
 
   const [formData, setFormData] = useState({
     staffNumber: '',
@@ -32,11 +36,20 @@ export default function NewStaffPage() {
     memo: '',
   });
 
-  // 初回マウント時にスタッフ番号を自動生成
+  // 初回マウント時にスタッフ番号を自動生成と組織コード取得
   useEffect(() => {
     const number = generateStaffNumber();
     setFormData(prev => ({ ...prev, staffNumber: number }));
-  }, []);
+
+    // 組織コードを取得
+    if (currentStaff?.organizationId) {
+      getOrganization(currentStaff.organizationId).then(org => {
+        if (org) {
+          setOrganizationCode(org.organizationCode);
+        }
+      });
+    }
+  }, [currentStaff?.organizationId]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -77,21 +90,25 @@ export default function NewStaffPage() {
         throw new Error('権限ロールは必須項目です');
       }
 
+      // 認証チェック
+      if (!uid || !currentStaff?.organizationId) {
+        throw new Error('ユーザー情報または組織情報が見つかりません');
+      }
+
+      if (!organizationCode) {
+        throw new Error('組織コードが取得できません');
+      }
+
       // 一時パスワードを生成
       const tempPassword = generateTemporaryPassword();
       setTemporaryPassword(tempPassword);
-
-      // 仮のデータ（実際にはログインユーザー情報を使用）
-      const currentUserId = 'temp-user-id'; // TODO: 実際のユーザーIDに置き換え
-      const organizationId = 'temp-org-id'; // TODO: 実際の組織IDに置き換え
-      const organizationCode = 'ORG001'; // TODO: 実際の事業所コードに置き換え
 
       // メールアドレスを自動生成
       const email = generateStaffEmail(formData.staffNumber, organizationCode);
 
       // 任意フィールドの処理（空文字列の場合はプロパティ自体を含めない）
       const staffData: any = {
-        organizationId,
+        organizationId: currentStaff.organizationId,
         staffNumber: formData.staffNumber,
         nameKanji: formData.nameKanji,
         nameKana: formData.nameKana,
@@ -102,8 +119,8 @@ export default function NewStaffPage() {
         email,
         isActive: true,
         passwordSetupCompleted: false, // 初回ログイン時にパスワード設定が必要
-        createdBy: currentUserId,
-        updatedBy: currentUserId,
+        createdBy: uid,
+        updatedBy: uid,
       }
 
       // 任意フィールドが入力されている場合のみ追加

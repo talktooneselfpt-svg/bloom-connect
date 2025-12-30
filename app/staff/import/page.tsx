@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { csvToObjects, downloadCSV, objectsToCSV } from '@/lib/utils/csvParser'
 import { createStaffWithAuth } from '@/lib/auth/staff'
 import { generateStaffEmail } from '@/lib/utils/email'
 import { generateTemporaryPassword } from '@/lib/utils/idGenerator'
 import RouteGuard from '@/components/RouteGuard'
+import { useAuth } from '@/lib/hooks/useAuth'
+import { getOrganization } from '@/lib/firestore/organizations'
 
 interface StaffImportRow {
   staffNumber: string
@@ -36,10 +38,23 @@ interface ImportResult {
 
 export default function StaffImportPage() {
   const router = useRouter()
+  const { staff: currentStaff, uid } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [results, setResults] = useState<ImportResult[]>([])
   const [showResults, setShowResults] = useState(false)
+  const [organizationCode, setOrganizationCode] = useState<string>('')
+
+  // 組織コードを取得
+  useEffect(() => {
+    if (currentStaff?.organizationId) {
+      getOrganization(currentStaff.organizationId).then(org => {
+        if (org) {
+          setOrganizationCode(org.organizationCode)
+        }
+      })
+    }
+  }, [currentStaff?.organizationId])
 
   // サンプルCSVをダウンロード
   const handleDownloadSample = () => {
@@ -104,12 +119,16 @@ export default function StaffImportPage() {
 
     try {
       const data = csvToObjects<StaffImportRow>(csvText)
-      const importResults: ImportResult[] = []
+      // 認証チェック
+      if (!uid || !currentStaff?.organizationId) {
+        throw new Error('ユーザー情報または組織情報が見つかりません')
+      }
 
-      // 仮データ（実際にはログインユーザー情報を使用）
-      const currentUserId = 'temp-user-id'
-      const organizationId = 'temp-org-id'
-      const organizationCode = 'ORG001'
+      if (!organizationCode) {
+        throw new Error('組織コードが取得できません')
+      }
+
+      const importResults: ImportResult[] = []
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i]
@@ -139,7 +158,7 @@ export default function StaffImportPage() {
 
           // 職員データを準備
           const staffData: any = {
-            organizationId,
+            organizationId: currentStaff.organizationId,
             staffNumber: row.staffNumber,
             nameKanji: row.nameKanji,
             nameKana: row.nameKana,
@@ -150,8 +169,8 @@ export default function StaffImportPage() {
             email,
             isActive: true,
             passwordSetupCompleted: false,
-            createdBy: currentUserId,
-            updatedBy: currentUserId,
+            createdBy: uid,
+            updatedBy: uid,
           }
 
           // 任意フィールド
