@@ -1,7 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/hooks/useAuth';
+import {
+  subscribeToNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  type Notification
+} from '@/lib/firestore/notifications';
+import {
+  getFavoriteApps,
+  saveFavoriteApps,
+  toggleFavoriteApp
+} from '@/lib/firestore/favoriteApps';
 
 // アプリの定義
 const availableApps = [
@@ -55,47 +67,64 @@ const availableApps = [
   },
 ];
 
-// サンプル通知データ
-const sampleNotifications = [
-  {
-    id: 1,
-    title: '新しいスタッフが登録されました',
-    message: '山田太郎さんが職員として登録されました',
-    time: '10分前',
-    type: 'info',
-    read: false,
-  },
-  {
-    id: 2,
-    title: '利用者情報が更新されました',
-    message: '鈴木花子さんの情報が更新されました',
-    time: '1時間前',
-    type: 'success',
-    read: false,
-  },
-  {
-    id: 3,
-    title: 'レポートが作成されました',
-    message: '月次レポートが作成されました',
-    time: '2時間前',
-    type: 'info',
-    read: true,
-  },
-  {
-    id: 4,
-    title: 'プラン更新のお知らせ',
-    message: '来月のプラン更新日が近づいています',
-    time: '1日前',
-    type: 'warning',
-    read: true,
-  },
-];
+// 時刻を相対的な表記に変換するヘルパー関数
+function getRelativeTime(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'たった今';
+    if (diffMins < 60) return `${diffMins}分前`;
+    if (diffHours < 24) return `${diffHours}時間前`;
+    if (diffDays < 7) return `${diffDays}日前`;
+    return date.toLocaleDateString('ja-JP');
+  } catch (error) {
+    return dateString;
+  }
+}
 
 export default function HomePage() {
   const router = useRouter();
+  const { uid, isAuthenticated } = useAuth();
   const [favoriteAppIds, setFavoriteAppIds] = useState<string[]>(['staff', 'clients', 'reports']);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [notifications, setNotifications] = useState(sampleNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // お気に入りアプリをFirestoreから読み込み
+  useEffect(() => {
+    if (!isAuthenticated || !uid) return;
+
+    const loadFavorites = async () => {
+      try {
+        const favorites = await getFavoriteApps(uid);
+        setFavoriteAppIds(favorites);
+      } catch (error) {
+        console.error('Failed to load favorites:', error);
+      }
+    };
+
+    loadFavorites();
+  }, [uid, isAuthenticated]);
+
+  // 通知をリアルタイムで監視
+  useEffect(() => {
+    if (!isAuthenticated || !uid) {
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = subscribeToNotifications(uid, (newNotifications) => {
+      setNotifications(newNotifications);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [uid, isAuthenticated]);
 
   // よく使うアプリ
   const favoriteApps = availableApps.filter(app => favoriteAppIds.includes(app.id));
@@ -103,18 +132,44 @@ export default function HomePage() {
   // その他のアプリ
   const otherApps = availableApps.filter(app => !favoriteAppIds.includes(app.id));
 
-  const toggleFavorite = (appId: string) => {
-    if (favoriteAppIds.includes(appId)) {
-      setFavoriteAppIds(favoriteAppIds.filter(id => id !== appId));
-    } else {
-      setFavoriteAppIds([...favoriteAppIds, appId]);
+  const toggleFavorite = async (appId: string) => {
+    if (!uid) return;
+
+    try {
+      const newFavorites = favoriteAppIds.includes(appId)
+        ? favoriteAppIds.filter(id => id !== appId)
+        : [...favoriteAppIds, appId];
+
+      // 楽観的更新
+      setFavoriteAppIds(newFavorites);
+
+      // Firestoreに保存
+      await saveFavoriteApps(uid, newFavorites);
+    } catch (error) {
+      console.error('Failed to update favorites:', error);
+      // エラー時は元に戻す
+      const favorites = await getFavoriteApps(uid);
+      setFavoriteAppIds(favorites);
     }
   };
 
-  const markAsRead = (notificationId: number) => {
-    setNotifications(notifications.map(n =>
-      n.id === notificationId ? { ...n, read: true } : n
-    ));
+  const markAsRead = async (notificationId: string) => {
+    try {
+      await markNotificationAsRead(notificationId);
+      // リアルタイムリスナーが自動的に更新するので、手動更新は不要
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (!uid) return;
+
+    try {
+      await markAllNotificationsAsRead(uid);
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -252,7 +307,7 @@ export default function HomePage() {
                           <p className="text-sm text-gray-700 mb-2">
                             {notification.message}
                           </p>
-                          <p className="text-xs text-gray-500">{notification.time}</p>
+                          <p className="text-xs text-gray-500">{getRelativeTime(notification.createdAt)}</p>
                         </div>
                         {!notification.read && (
                           <div className="w-2 h-2 bg-blue-600 rounded-full mt-1"></div>
