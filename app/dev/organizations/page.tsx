@@ -262,16 +262,16 @@ export default function OrganizationsPage() {
                       <h5 className="text-sm text-gray-400 mb-1">住所</h5>
                       <p className="text-sm">
                         〒{org.postalCode || '未設定'}<br />
-                        {org.prefecture || ''} {org.city || ''} {org.address || ''}<br />
-                        {org.building || ''}
+                        {org.prefecture || ''} {org.city || ''}<br />
+                        {org.addressLine || ''}
                       </p>
                     </div>
                     <div className="bg-gray-700 rounded-lg p-4">
                       <h5 className="text-sm text-gray-400 mb-1">連絡先</h5>
                       <p className="text-sm">
-                        電話: {org.phoneNumber || '未設定'}<br />
-                        FAX: {org.faxNumber || '未設定'}<br />
-                        Email: {org.email || '未設定'}
+                        電話: {org.phone || '未設定'}<br />
+                        Email: {org.email || '未設定'}<br />
+                        管理者: {org.administratorName || '未設定'}
                       </p>
                     </div>
                   </div>
