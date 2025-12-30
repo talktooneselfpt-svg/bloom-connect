@@ -1,138 +1,144 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import RouteGuard from "@/components/RouteGuard"
+import {
+  getAllOrganizations,
+  deactivateOrganization,
+  reactivateOrganization,
+} from "@/lib/firestore/organizations"
+import { getStaffByOrganization } from "@/lib/firestore/staff"
+import { getClientsByOrganization } from "@/lib/firestore/clients"
+import { Organization } from "@/types/organization"
+import { useAuth } from "@/lib/hooks/useAuth"
 
-interface Organization {
-  id: number
-  name: string
-  plan: string
-  status: "active" | "trial" | "suspended" | "cancelled"
-  users: number
-  maxUsers: number
-  createdAt: string
-  lastActive: string
-  monthlyFee: number
-  apps: {
-    name: string
-    usage: number
-    lastUsed: string
-  }[]
+interface OrganizationWithStats extends Organization {
+  staffCount: number
+  clientCount: number
 }
 
 export default function OrganizationsPage() {
+  const { uid } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState<string>("all")
-  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
+  const [selectedOrg, setSelectedOrg] = useState<OrganizationWithStats | null>(null)
+  const [organizations, setOrganizations] = useState<OrganizationWithStats[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // TODO: 実際のデータはAPIから取得
-  const organizations: Organization[] = [
-    {
-      id: 1,
-      name: "さくら介護センター",
-      plan: "プレミアム",
-      status: "active",
-      users: 25,
-      maxUsers: 50,
-      createdAt: "2024-01-15",
-      lastActive: "2時間前",
-      monthlyFee: 50000,
-      apps: [
-        { name: "記録管理", usage: 1250, lastUsed: "2時間前" },
-        { name: "スケジュール", usage: 890, lastUsed: "3時間前" },
-        { name: "コミュニティ", usage: 450, lastUsed: "1日前" }
-      ]
-    },
-    {
-      id: 2,
-      name: "ひまわり訪問介護",
-      plan: "スタンダード",
-      status: "active",
-      users: 15,
-      maxUsers: 30,
-      createdAt: "2024-02-20",
-      lastActive: "5時間前",
-      monthlyFee: 30000,
-      apps: [
-        { name: "記録管理", usage: 780, lastUsed: "5時間前" },
-        { name: "スケジュール", usage: 560, lastUsed: "6時間前" },
-        { name: "コミュニティ", usage: 120, lastUsed: "2日前" }
-      ]
-    },
-    {
-      id: 3,
-      name: "あおぞら福祉サービス",
-      plan: "ベーシック",
-      status: "trial",
-      users: 8,
-      maxUsers: 15,
-      createdAt: "2024-12-01",
-      lastActive: "1日前",
-      monthlyFee: 0,
-      apps: [
-        { name: "記録管理", usage: 45, lastUsed: "1日前" },
-        { name: "スケジュール", usage: 32, lastUsed: "1日前" },
-        { name: "コミュニティ", usage: 8, lastUsed: "3日前" }
-      ]
-    },
-    {
-      id: 4,
-      name: "みどり訪問看護ステーション",
-      plan: "スタンダード",
-      status: "active",
-      users: 18,
-      maxUsers: 30,
-      createdAt: "2024-03-10",
-      lastActive: "1時間前",
-      monthlyFee: 30000,
-      apps: [
-        { name: "記録管理", usage: 920, lastUsed: "1時間前" },
-        { name: "スケジュール", usage: 670, lastUsed: "2時間前" },
-        { name: "コミュニティ", usage: 280, lastUsed: "12時間前" }
-      ]
-    },
-    {
-      id: 5,
-      name: "つばさ介護ステーション",
-      plan: "プレミアム",
-      status: "suspended",
-      users: 22,
-      maxUsers: 50,
-      createdAt: "2023-11-05",
-      lastActive: "7日前",
-      monthlyFee: 50000,
-      apps: [
-        { name: "記録管理", usage: 1100, lastUsed: "7日前" },
-        { name: "スケジュール", usage: 800, lastUsed: "7日前" },
-        { name: "コミュニティ", usage: 350, lastUsed: "8日前" }
-      ]
-    }
-  ]
+  useEffect(() => {
+    loadOrganizations()
+  }, [])
 
-  const filteredOrganizations = organizations.filter(org => {
-    const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = filterStatus === "all" || org.status === filterStatus
-    return matchesSearch && matchesStatus
-  })
+  const loadOrganizations = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active": return "bg-green-500 text-white"
-      case "trial": return "bg-yellow-500 text-gray-900"
-      case "suspended": return "bg-red-500 text-white"
-      case "cancelled": return "bg-gray-500 text-white"
-      default: return "bg-gray-500 text-white"
+      // すべての事業所を取得
+      const orgs = await getAllOrganizations()
+
+      // 各事業所のスタッフ数とクライアント数を取得
+      const orgsWithStats = await Promise.all(
+        orgs.map(async (org) => {
+          try {
+            const staff = await getStaffByOrganization(org.id)
+            const clients = await getClientsByOrganization(org.id)
+
+            return {
+              ...org,
+              staffCount: staff.length,
+              clientCount: clients.length,
+            } as OrganizationWithStats
+          } catch (err) {
+            console.error(`事業所 ${org.id} の統計取得エラー:`, err)
+            return {
+              ...org,
+              staffCount: 0,
+              clientCount: 0,
+            } as OrganizationWithStats
+          }
+        })
+      )
+
+      setOrganizations(orgsWithStats)
+    } catch (err) {
+      console.error('事業所データの取得エラー:', err)
+      setError('事業所データの取得に失敗しました')
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "active": return "稼働中"
-      case "trial": return "トライアル"
-      case "suspended": return "停止中"
-      case "cancelled": return "解約"
-      default: return status
+  const handleDeactivate = async (orgId: string) => {
+    if (!uid) {
+      alert('ユーザー情報が見つかりません')
+      return
     }
+
+    if (!confirm('この事業所を無効化してもよろしいですか？')) {
+      return
+    }
+
+    try {
+      await deactivateOrganization(orgId, uid)
+      await loadOrganizations()
+      alert('事業所を無効化しました')
+    } catch (err) {
+      console.error('事業所無効化エラー:', err)
+      alert('事業所の無効化に失敗しました')
+    }
+  }
+
+  const handleReactivate = async (orgId: string) => {
+    if (!uid) {
+      alert('ユーザー情報が見つかりません')
+      return
+    }
+
+    if (!confirm('この事業所を再アクティブ化してもよろしいですか？')) {
+      return
+    }
+
+    try {
+      await reactivateOrganization(orgId, uid)
+      await loadOrganizations()
+      alert('事業所を再アクティブ化しました')
+    } catch (err) {
+      console.error('事業所再アクティブ化エラー:', err)
+      alert('事業所の再アクティブ化に失敗しました')
+    }
+  }
+
+  const filteredOrganizations = organizations.filter(org => {
+    const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = filterStatus === "all" ||
+      (filterStatus === "active" && org.isActive) ||
+      (filterStatus === "inactive" && !org.isActive)
+    return matchesSearch && matchesStatus
+  })
+
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"
+  }
+
+  const getStatusText = (isActive: boolean) => {
+    return isActive ? "稼働中" : "停止中"
+  }
+
+  if (isLoading) {
+    return (
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-400">読み込み中...</p>
+            </div>
+          </div>
+        </div>
+      </RouteGuard>
+    )
   }
 
   return (
@@ -142,8 +148,14 @@ export default function OrganizationsPage() {
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">事業所管理</h1>
-          <p className="text-gray-400">契約事業所の一覧とアプリ利用状況</p>
+          <p className="text-gray-400">契約事業所の一覧と利用状況</p>
         </div>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded mb-6">
+            {error}
+          </div>
+        )}
 
         {/* 統計サマリー */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -154,19 +166,19 @@ export default function OrganizationsPage() {
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <p className="text-sm text-gray-400 mb-1">稼働中</p>
             <p className="text-2xl font-bold text-green-400">
-              {organizations.filter(o => o.status === "active").length}
+              {organizations.filter(o => o.isActive).length}
             </p>
           </div>
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <p className="text-sm text-gray-400 mb-1">トライアル</p>
-            <p className="text-2xl font-bold text-yellow-400">
-              {organizations.filter(o => o.status === "trial").length}
+            <p className="text-sm text-gray-400 mb-1">停止中</p>
+            <p className="text-2xl font-bold text-gray-400">
+              {organizations.filter(o => !o.isActive).length}
             </p>
           </div>
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <p className="text-sm text-gray-400 mb-1">総ユーザー数</p>
             <p className="text-2xl font-bold">
-              {organizations.reduce((sum, org) => sum + org.users, 0)}
+              {organizations.reduce((sum, org) => sum + org.staffCount, 0)}
             </p>
           </div>
         </div>
@@ -191,12 +203,13 @@ export default function OrganizationsPage() {
               >
                 <option value="all">すべて</option>
                 <option value="active">稼働中</option>
-                <option value="trial">トライアル</option>
-                <option value="suspended">停止中</option>
-                <option value="cancelled">解約</option>
+                <option value="inactive">停止中</option>
               </select>
-              <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
-                新規追加
+              <button
+                onClick={loadOrganizations}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              >
+                更新
               </button>
             </div>
           </div>
@@ -215,19 +228,17 @@ export default function OrganizationsPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-xl font-bold">{org.name}</h3>
-                    <span className={`text-xs px-2 py-1 rounded ${getStatusColor(org.status)}`}>
-                      {getStatusText(org.status)}
+                    <span className={`text-xs px-2 py-1 rounded ${getStatusColor(org.isActive)}`}>
+                      {getStatusText(org.isActive)}
                     </span>
-                    <span className="text-sm text-gray-400">{org.plan}</span>
+                    <span className="text-sm text-gray-400">{org.organizationType}</span>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-gray-400">
-                    <span>ユーザー: {org.users}/{org.maxUsers}</span>
+                    <span>スタッフ: {org.staffCount}</span>
                     <span>•</span>
-                    <span>登録日: {org.createdAt}</span>
+                    <span>利用者: {org.clientCount}</span>
                     <span>•</span>
-                    <span>最終アクセス: {org.lastActive}</span>
-                    <span>•</span>
-                    <span className="text-green-400">¥{org.monthlyFee.toLocaleString()}/月</span>
+                    <span>事業所番号: {org.organizationCode}</span>
                   </div>
                 </div>
                 <svg
@@ -245,35 +256,48 @@ export default function OrganizationsPage() {
               {/* 詳細情報（展開時） */}
               {selectedOrg?.id === org.id && (
                 <div className="border-t border-gray-700 pt-4 mt-4">
-                  <h4 className="font-semibold mb-3">アプリ利用状況</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    {org.apps.map((app, index) => (
-                      <div key={index} className="bg-gray-700 rounded-lg p-4">
-                        <h5 className="font-medium mb-2">{app.name}</h5>
-                        <p className="text-2xl font-bold text-blue-400 mb-1">{app.usage}</p>
-                        <p className="text-xs text-gray-400">利用回数 / 月</p>
-                        <p className="text-xs text-gray-500 mt-2">最終利用: {app.lastUsed}</p>
-                      </div>
-                    ))}
+                  <h4 className="font-semibold mb-3">詳細情報</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="bg-gray-700 rounded-lg p-4">
+                      <h5 className="text-sm text-gray-400 mb-1">住所</h5>
+                      <p className="text-sm">
+                        〒{org.postalCode || '未設定'}<br />
+                        {org.prefecture || ''} {org.city || ''} {org.address || ''}<br />
+                        {org.building || ''}
+                      </p>
+                    </div>
+                    <div className="bg-gray-700 rounded-lg p-4">
+                      <h5 className="text-sm text-gray-400 mb-1">連絡先</h5>
+                      <p className="text-sm">
+                        電話: {org.phoneNumber || '未設定'}<br />
+                        FAX: {org.faxNumber || '未設定'}<br />
+                        Email: {org.email || '未設定'}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm">
                       詳細を見る
                     </button>
-                    <button className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm">
-                      設定を編集
-                    </button>
-                    <button className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-colors text-sm">
-                      サポート連絡
-                    </button>
-                    {org.status === "suspended" && (
-                      <button className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm">
-                        利用を再開
-                      </button>
-                    )}
-                    {org.status === "active" && (
-                      <button className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-sm">
+                    {org.isActive ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeactivate(org.id)
+                        }}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-sm"
+                      >
                         利用を停止
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleReactivate(org.id)
+                        }}
+                        className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm"
+                      >
+                        利用を再開
                       </button>
                     )}
                   </div>
