@@ -1,71 +1,101 @@
 "use client"
+
+import { useState, useEffect } from "react"
 import RouteGuard from "@/components/RouteGuard"
-
-import { useState } from "react"
-
-interface BillingRecord {
-  id: number
-  organizationName: string
-  plan: string
-  amount: number
-  status: "paid" | "pending" | "overdue" | "cancelled"
-  billingDate: string
-  paidDate?: string
-  invoiceNumber: string
-}
+import { getAllBillingRecords, BillingRecord } from "@/lib/firestore/billing"
+import { Timestamp } from "firebase/firestore"
 
 export default function BillingPage() {
   const [selectedMonth, setSelectedMonth] = useState("2025-12")
   const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [billingRecords, setBillingRecords] = useState<BillingRecord[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // TODO: 実際のデータはAPIから取得
-  const billingRecords: BillingRecord[] = [
+  useEffect(() => {
+    loadBillingRecords()
+  }, [])
+
+  const loadBillingRecords = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const records = await getAllBillingRecords()
+
+      // データがない場合はデモデータを表示
+      if (records.length === 0) {
+        setBillingRecords(getDemoData())
+      } else {
+        setBillingRecords(records)
+      }
+    } catch (err) {
+      console.error('請求データの取得エラー:', err)
+      setError('請求データの取得に失敗しました。デモデータを表示します。')
+      setBillingRecords(getDemoData())
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // デモデータ
+  const getDemoData = (): BillingRecord[] => [
     {
-      id: 1,
+      id: "demo-1",
+      organizationId: "org-001",
       organizationName: "さくら介護センター",
       plan: "プレミアム",
       amount: 50000,
       status: "paid",
-      billingDate: "2025-12-01",
-      paidDate: "2025-12-03",
-      invoiceNumber: "INV-2025-12-001"
+      billingDate: Timestamp.fromDate(new Date("2025-12-01")),
+      paidDate: Timestamp.fromDate(new Date("2025-12-03")),
+      invoiceNumber: "INV-2025-12-001",
+      createdAt: Timestamp.now()
     },
     {
-      id: 2,
+      id: "demo-2",
+      organizationId: "org-002",
       organizationName: "ひまわり訪問介護",
       plan: "スタンダード",
       amount: 30000,
       status: "paid",
-      billingDate: "2025-12-01",
-      paidDate: "2025-12-05",
-      invoiceNumber: "INV-2025-12-002"
+      billingDate: Timestamp.fromDate(new Date("2025-12-01")),
+      paidDate: Timestamp.fromDate(new Date("2025-12-05")),
+      invoiceNumber: "INV-2025-12-002",
+      createdAt: Timestamp.now()
     },
     {
-      id: 3,
+      id: "demo-3",
+      organizationId: "org-003",
       organizationName: "みどり訪問看護ステーション",
       plan: "スタンダード",
       amount: 30000,
       status: "pending",
-      billingDate: "2025-12-01",
-      invoiceNumber: "INV-2025-12-003"
+      billingDate: Timestamp.fromDate(new Date("2025-12-01")),
+      invoiceNumber: "INV-2025-12-003",
+      createdAt: Timestamp.now()
     },
     {
-      id: 4,
+      id: "demo-4",
+      organizationId: "org-004",
       organizationName: "つばさ介護ステーション",
       plan: "プレミアム",
       amount: 50000,
       status: "overdue",
-      billingDate: "2025-11-01",
-      invoiceNumber: "INV-2025-11-005"
+      billingDate: Timestamp.fromDate(new Date("2025-11-01")),
+      invoiceNumber: "INV-2025-11-005",
+      createdAt: Timestamp.now()
     },
     {
-      id: 5,
+      id: "demo-5",
+      organizationId: "org-005",
       organizationName: "あおぞら福祉サービス",
       plan: "ベーシック (トライアル)",
       amount: 0,
       status: "cancelled",
-      billingDate: "2025-12-01",
-      invoiceNumber: "INV-2025-12-004"
+      billingDate: Timestamp.fromDate(new Date("2025-12-01")),
+      invoiceNumber: "INV-2025-12-004",
+      createdAt: Timestamp.now()
     }
   ]
 
@@ -106,6 +136,26 @@ export default function BillingPage() {
     }
   }
 
+  const formatDate = (timestamp: Timestamp | undefined) => {
+    if (!timestamp) return "-"
+    return timestamp.toDate().toLocaleDateString('ja-JP')
+  }
+
+  if (isLoading) {
+    return (
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-400">読み込み中...</p>
+            </div>
+          </div>
+        </div>
+      </RouteGuard>
+    )
+  }
+
   return (
     <RouteGuard>
     <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
@@ -115,6 +165,12 @@ export default function BillingPage() {
           <h1 className="text-3xl font-bold mb-2">課金管理</h1>
           <p className="text-gray-400">請求・支払い状況の管理</p>
         </div>
+
+        {error && (
+          <div className="bg-yellow-500/10 border border-yellow-500 text-yellow-400 px-4 py-3 rounded mb-6">
+            {error}
+          </div>
+        )}
 
         {/* 統計サマリー */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -204,8 +260,11 @@ export default function BillingPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
-                請求書一括発行
+              <button
+                onClick={loadBillingRecords}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              >
+                更新
               </button>
               <button className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
                 CSVエクスポート
@@ -262,10 +321,10 @@ export default function BillingPage() {
                       ¥{record.amount.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                      {record.billingDate}
+                      {formatDate(record.billingDate)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                      {record.paidDate || "-"}
+                      {formatDate(record.paidDate)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs rounded ${getStatusColor(record.status)}`}>
