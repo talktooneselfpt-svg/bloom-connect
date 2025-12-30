@@ -68,74 +68,13 @@ service cloud.firestore {
       return request.resource.data.organizationId == getUserOrganizationId();
     }
 
-    // データ検証: 必須フィールドが存在するか
-    function hasRequiredFields(fields) {
-      return request.resource.data.keys().hasAll(fields);
-    }
-
-    // データ検証: 文字列型かどうか
-    function isString(field) {
-      return request.resource.data[field] is string;
-    }
-
-    // データ検証: ブール型かどうか
-    function isBool(field) {
-      return request.resource.data[field] is bool;
-    }
-
-    // データ検証: 有効なステータス値かどうか（billing用）
-    function isValidBillingStatus() {
-      return request.resource.data.status == 'paid' ||
-             request.resource.data.status == 'pending' ||
-             request.resource.data.status == 'overdue' ||
-             request.resource.data.status == 'cancelled';
-    }
-
-    // データ検証: 有効なエラーレベルかどうか
-    function isValidErrorLevel() {
-      return request.resource.data.level == 'error' ||
-             request.resource.data.level == 'warning' ||
-             request.resource.data.level == 'critical';
-    }
-
-    // データ検証: 有効なサービス名かどうか
-    function isValidServiceName() {
-      return request.resource.data.service == 'webApp' ||
-             request.resource.data.service == 'api' ||
-             request.resource.data.service == 'database' ||
-             request.resource.data.service == 'storage';
-    }
-
-    // データ検証: 有効なシステムステータスかどうか
-    function isValidSystemStatus() {
-      return request.resource.data.status == '正常' ||
-             request.resource.data.status == '警告' ||
-             request.resource.data.status == 'エラー';
-    }
-
     // ===================================
     // 事業所コレクション
     // ===================================
     match /organizations/{orgId} {
-      // 読み取り: 認証済みユーザーは全て閲覧可能（開発者は全組織、それ以外は自組織のみ）
-      allow read: if isAuthenticated() &&
-                     (isDeveloper() || isSameOrganization(orgId));
-
-      // 作成: 開発者のみ
-      allow create: if isDeveloper() &&
-                       hasRequiredFields(['name', 'organizationCode', 'phone', 'email',
-                                         'organizationType', 'administratorName', 'isActive']) &&
-                       isString('name') &&
-                       isString('organizationCode') &&
-                       isBool('isActive');
-
-      // 更新: 開発者は全て、管理者は自組織のみ
-      allow update: if (isDeveloper() ||
-                       (isAdmin() && resourceBelongsToUserOrg())) &&
-                       isString('name') &&
-                       isBool('isActive');
-
-      // 削除: 開発者のみ
+      allow read: if isAuthenticated() && (isDeveloper() || isSameOrganization(orgId));
+      allow create: if isDeveloper();
+      allow update: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
       allow delete: if isDeveloper();
     }
 
@@ -143,73 +82,30 @@ service cloud.firestore {
     // 職員コレクション
     // ===================================
     match /staff/{staffId} {
-      // 読み取り: 認証済みユーザーは自組織のスタッフのみ閲覧可能（開発者は全て）
-      allow read: if isAuthenticated() &&
-                     (isDeveloper() || resourceBelongsToUserOrg());
-
-      // 作成: 開発者または管理者のみ（自組織のスタッフのみ作成可能）
-      allow create: if (isDeveloper() || isAdmin()) &&
-                       hasRequiredFields(['organizationId', 'staffNumber', 'nameKanji',
-                                         'role', 'email', 'isActive']) &&
-                       (isDeveloper() || requestBelongsToUserOrg()) &&
-                       isString('nameKanji') &&
-                       isString('email') &&
-                       isBool('isActive');
-
-      // 更新: 開発者・管理者は全て、一般ユーザーは自分のデータのみ（ロール・メール・職員番号は変更不可）
-      allow update: if (isDeveloper() ||
-                       (isAdmin() && resourceBelongsToUserOrg()) ||
-                       (isOwner(staffId) &&
-                        !request.resource.data.diff(resource.data).affectedKeys()
-                          .hasAny(['role', 'email', 'staffNumber', 'organizationId'])));
-
-      // 削除: 開発者または管理者のみ（自組織のスタッフのみ）
-      allow delete: if isDeveloper() ||
-                       (isAdmin() && resourceBelongsToUserOrg());
+      allow read: if isAuthenticated() && (isDeveloper() || resourceBelongsToUserOrg());
+      allow create: if (isDeveloper() || isAdmin()) && (isDeveloper() || requestBelongsToUserOrg());
+      allow update: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg()) || 
+                       (isOwner(staffId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'email', 'staffNumber', 'organizationId']));
+      allow delete: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
     }
 
     // ===================================
     // 利用者コレクション
     // ===================================
     match /clients/{clientId} {
-      // 読み取り: 認証済みユーザーは自組織の利用者のみ閲覧可能（開発者は全て）
-      allow read: if isAuthenticated() &&
-                     (isDeveloper() || resourceBelongsToUserOrg());
-
-      // 作成: 開発者または管理者のみ（自組織の利用者のみ作成可能）
-      allow create: if (isDeveloper() || isAdmin()) &&
-                       hasRequiredFields(['organizationId', 'clientNumber', 'nameKanji', 'isActive']) &&
-                       (isDeveloper() || requestBelongsToUserOrg()) &&
-                       isString('nameKanji') &&
-                       isBool('isActive');
-
-      // 更新: 開発者または管理者のみ（自組織の利用者のみ）
-      allow update: if isDeveloper() ||
-                       (isAdmin() && resourceBelongsToUserOrg());
-
-      // 削除: 開発者または管理者のみ（自組織の利用者のみ）
-      allow delete: if isDeveloper() ||
-                       (isAdmin() && resourceBelongsToUserOrg());
+      allow read: if isAuthenticated() && (isDeveloper() || resourceBelongsToUserOrg());
+      allow create: if (isDeveloper() || isAdmin()) && (isDeveloper() || requestBelongsToUserOrg());
+      allow update: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
+      allow delete: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
     }
 
     // ===================================
     // 課金データコレクション
     // ===================================
     match /billing/{billingId} {
-      // 読み取り: 開発者のみ
       allow read: if isDeveloper();
-
-      // 作成: 開発者のみ
-      allow create: if isDeveloper() &&
-                       hasRequiredFields(['organizationId', 'organizationName', 'plan',
-                                         'amount', 'status', 'billingDate', 'invoiceNumber']) &&
-                       isString('status') &&
-                       isValidBillingStatus();
-
-      // 更新: 開発者のみ
+      allow create: if isDeveloper();
       allow update: if isDeveloper();
-
-      // 削除: 開発者のみ
       allow delete: if isDeveloper();
     }
 
@@ -217,19 +113,9 @@ service cloud.firestore {
     // エラーログコレクション
     // ===================================
     match /errorLogs/{errorId} {
-      // 読み取り: 開発者のみ
       allow read: if isDeveloper();
-
-      // 作成: 開発者のみ
-      allow create: if isDeveloper() &&
-                       hasRequiredFields(['timestamp', 'level', 'message', 'service', 'resolved']) &&
-                       isValidErrorLevel() &&
-                       isBool('resolved');
-
-      // 更新: 開発者のみ（解決済みフラグの更新など）
+      allow create: if isDeveloper();
       allow update: if isDeveloper();
-
-      // 削除: 開発者のみ
       allow delete: if isDeveloper();
     }
 
@@ -237,19 +123,9 @@ service cloud.firestore {
     // システムメトリクスコレクション
     // ===================================
     match /systemMetrics/{metricId} {
-      // 読み取り: 開発者のみ
       allow read: if isDeveloper();
-
-      // 作成: 開発者のみ
-      allow create: if isDeveloper() &&
-                       hasRequiredFields(['timestamp', 'service', 'status']) &&
-                       isValidServiceName() &&
-                       isValidSystemStatus();
-
-      // 更新: 開発者のみ
+      allow create: if isDeveloper();
       allow update: if isDeveloper();
-
-      // 削除: 開発者のみ
       allow delete: if isDeveloper();
     }
 
@@ -257,11 +133,7 @@ service cloud.firestore {
     // サブスクリプションコレクション
     // ===================================
     match /subscriptions/{subId} {
-      // 読み取り: 開発者または自組織の管理者
-      allow read: if isDeveloper() ||
-                     (isAdmin() && resourceBelongsToUserOrg());
-
-      // 作成・更新・削除: 開発者のみ
+      allow read: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
       allow create: if isDeveloper();
       allow update: if isDeveloper();
       allow delete: if isDeveloper();
@@ -271,21 +143,10 @@ service cloud.firestore {
     // 通知コレクション
     // ===================================
     match /notifications/{notificationId} {
-      // 読み取り: 自分宛の通知のみ（開発者は全て）
-      allow read: if isDeveloper() ||
-                     (isAuthenticated() && resource.data.userId == request.auth.uid);
-
-      // 作成: 開発者または管理者
+      allow read: if isDeveloper() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAdminOrDev();
-
-      // 更新: 既読状態の更新は本人のみ可能（readフィールドのみ）
-      allow update: if isDeveloper() ||
-                       (isAuthenticated() &&
-                        resource.data.userId == request.auth.uid &&
-                        request.resource.data.diff(resource.data).affectedKeys()
-                          .hasOnly(['read', 'readAt']));
-
-      // 削除: 開発者または管理者
+      allow update: if isDeveloper() || (isAuthenticated() && resource.data.userId == request.auth.uid && 
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']));
       allow delete: if isAdminOrDev();
     }
 
@@ -293,7 +154,6 @@ service cloud.firestore {
     // ユーザー設定コレクション
     // ===================================
     match /userSettings/{userId} {
-      // 読み取り・書き込み: 自分の設定のみ（開発者は全て閲覧可能）
       allow read: if isDeveloper() || isOwner(userId);
       allow write: if isOwner(userId);
     }
@@ -302,7 +162,6 @@ service cloud.firestore {
     // お気に入りアプリコレクション
     // ===================================
     match /favoriteApps/{userId} {
-      // 読み取り・書き込み: 自分のお気に入りのみ（開発者は全て閲覧可能）
       allow read: if isDeveloper() || isOwner(userId);
       allow write: if isOwner(userId);
     }
@@ -311,27 +170,17 @@ service cloud.firestore {
     // レポートコレクション
     // ===================================
     match /reports/{reportId} {
-      // 読み取り: 認証済みユーザーは自組織のレポートのみ（開発者は全て）
-      allow read: if isDeveloper() ||
-                     (isAuthenticated() && resourceBelongsToUserOrg());
-
-      // 作成・更新・削除: 開発者または管理者（自組織のレポートのみ）
-      allow create: if isDeveloper() ||
-                       (isAdmin() && requestBelongsToUserOrg());
-      allow update: if isDeveloper() ||
-                       (isAdmin() && resourceBelongsToUserOrg());
-      allow delete: if isDeveloper() ||
-                       (isAdmin() && resourceBelongsToUserOrg());
+      allow read: if isDeveloper() || (isAuthenticated() && resourceBelongsToUserOrg());
+      allow create: if isDeveloper() || (isAdmin() && requestBelongsToUserOrg());
+      allow update: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
+      allow delete: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg());
     }
 
     // ===================================
     // 監査ログコレクション
     // ===================================
     match /auditLogs/{logId} {
-      // 読み取り: 開発者のみ
       allow read: if isDeveloper();
-
-      // 書き込み: システムのみ（クライアントからは書き込み不可）
       allow write: if false;
     }
 
@@ -339,10 +188,7 @@ service cloud.firestore {
     // システム設定コレクション
     // ===================================
     match /systemSettings/{settingId} {
-      // 読み取り: 認証済みユーザー
       allow read: if isAuthenticated();
-
-      // 書き込み: 開発者のみ
       allow write: if isDeveloper();
     }
 
