@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { csvToObjects, downloadCSV, objectsToCSV } from '@/lib/utils/csvParser'
 import { createClient } from '@/lib/firestore/clients'
+import RouteGuard from '@/components/RouteGuard'
 
 interface ClientImportRow {
   clientNumber: string
@@ -223,9 +224,10 @@ export default function ClientImportPage() {
   const failureCount = results.filter(r => !r.success).length
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
+    <RouteGuard>
+      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">利用者データCSVインポート</h1>
 
           {/* 説明 */}
@@ -414,5 +416,6 @@ export default function ClientImportPage() {
         </div>
       </div>
     </div>
+    </RouteGuard>
   )
 }

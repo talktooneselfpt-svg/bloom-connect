@@ -131,24 +131,63 @@ export function stringToRole(roleString: string): UserRole | null {
  * パス別に必要なパーミッション
  */
 export const pathPermissions: Record<string, Permission[]> = {
+  // スタッフ管理
   '/staff': [Permission.VIEW_STAFF],
   '/staff/new': [Permission.CREATE_STAFF],
   '/staff/import': [Permission.IMPORT_STAFF],
+
+  // 利用者管理
   '/clients': [Permission.VIEW_CLIENTS],
   '/clients/new': [Permission.CREATE_CLIENTS],
   '/clients/import': [Permission.IMPORT_CLIENTS],
+
+  // 事業所管理
   '/organizations': [Permission.VIEW_ORGANIZATIONS],
+  '/organizations/new': [Permission.EDIT_ORGANIZATIONS],
+
+  // レポート
   '/reports': [Permission.VIEW_REPORTS],
+
+  // マイページ
   '/mypage': [Permission.VIEW_MYPAGE],
+  '/mypage/billing': [Permission.MANAGE_BILLING],
+  '/mypage/plan': [Permission.CHANGE_PLAN],
+
+  // 開発者ツール
   '/dev': [Permission.ACCESS_DEV_TOOLS],
 };
+
+/**
+ * パスが編集ページかチェック（動的ルート対応）
+ */
+export function getPathPermissions(path: string): Permission[] | undefined {
+  // 完全一致を優先
+  if (pathPermissions[path]) {
+    return pathPermissions[path];
+  }
+
+  // 動的ルートのパターンマッチング
+  if (path.match(/^\/staff\/[^/]+\/edit$/)) {
+    return [Permission.EDIT_STAFF];
+  }
+  if (path.match(/^\/clients\/[^/]+\/edit$/)) {
+    return [Permission.EDIT_CLIENTS];
+  }
+  if (path.match(/^\/organizations\/[^/]+\/edit$/)) {
+    return [Permission.EDIT_ORGANIZATIONS];
+  }
+
+  return undefined;
+}
 
 /**
  * パスにアクセス可能かチェック
  */
 export function canAccessPath(role: UserRole, path: string): boolean {
+  // パスの権限を取得（動的ルート対応）
+  const requiredPermissions = getPathPermissions(path);
+
   // パスが定義されていない場合は全員アクセス可能
-  const requiredPermissions = pathPermissions[path];
   if (!requiredPermissions) {
     return true;
   }

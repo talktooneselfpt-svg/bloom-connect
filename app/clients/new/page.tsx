@@ -11,6 +11,7 @@ import {
   SWALLOWING_STATUS
 } from "@/types/client"
 import { calculateAge, isValidBirthDate } from "@/lib/utils/age"
+import RouteGuard from "@/components/RouteGuard"
 
 export default function NewClientPage() {
   const router = useRouter()
@@ -157,8 +158,9 @@ export default function NewClientPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <div className="mb-4">
             <svg
               className="mx-auto h-12 w-12 text-green-500"
@@ -178,12 +180,14 @@ export default function NewClientPage() {
           <p className="text-gray-600">利用者の登録が完了しました。</p>
         </div>
       </div>
+      </RouteGuard>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+    <RouteGuard>
+      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">利用者登録</h1>
 
@@ -603,5 +607,6 @@ export default function NewClientPage() {
         </div>
       </div>
     </div>
+    </RouteGuard>
   )
 }

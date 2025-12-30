@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { getClient, updateClient } from "@/lib/firestore/clients"
 import { Client, GENDERS, LIVING_ARRANGEMENTS, CARE_LEVELS, ADL_LEVELS, SWALLOWING_STATUS } from "@/types/client"
 import { calculateAge, isValidBirthDate } from "@/lib/utils/age"
+import RouteGuard from "@/components/RouteGuard"
 export default function EditClientPage() {
   const router = useRouter()
   const params = useParams()
@@ -199,53 +200,60 @@ export default function EditClientPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">読み込み中...</div>
-      </div>
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-gray-600">読み込み中...</div>
+        </div>
+      </RouteGuard>
     )
   }
 
   if (error && !formData.nameKanji) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded max-w-md">
-          {error}
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded max-w-md">
+            {error}
+          </div>
         </div>
-      </div>
+      </RouteGuard>
     )
   }
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
-          <div className="mb-4">
-            <svg
-              className="mx-auto h-12 w-12 text-green-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+            <div className="mb-4">
+              <svg
+                className="mx-auto h-12 w-12 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">更新完了</h2>
+            <p className="text-gray-600">利用者情報を更新しました。</p>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">更新完了</h2>
-          <p className="text-gray-600">利用者情報を更新しました。</p>
         </div>
-      </div>
+      </RouteGuard>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">利用者情報編集</h1>
+    <RouteGuard>
+      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">利用者情報編集</h1>
 
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -665,5 +673,6 @@ export default function EditClientPage() {
         </div>
       </div>
     </div>
+    </RouteGuard>
   )
 }

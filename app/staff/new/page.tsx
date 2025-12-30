@@ -6,6 +6,7 @@ import { createStaffWithAuth } from '@/lib/auth/staff';
 import { JOB_TYPES, JOB_CATEGORIES, POSITIONS, ROLES, EMPLOYMENT_TYPES } from '@/types/staff';
 import { generateStaffEmail } from '@/lib/utils/email';
 import { generateTemporaryPassword, generateStaffNumber } from '@/lib/utils/idGenerator';
+import RouteGuard from '@/components/RouteGuard';
 
 export default function NewStaffPage() {
   const router = useRouter();
@@ -146,8 +147,9 @@ export default function NewStaffPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
           <div className="text-center mb-6">
             <svg
               className="mx-auto h-12 w-12 text-green-500"
@@ -193,14 +195,16 @@ export default function NewStaffPage() {
           </button>
         </div>
       </div>
+      </RouteGuard>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">職員登録</h1>
+    <RouteGuard>
+      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">職員登録</h1>
 
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -522,5 +526,6 @@ export default function NewStaffPage() {
         </div>
       </div>
     </div>
+    </RouteGuard>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getStaff, updateStaff } from '@/lib/firestore/staff';
 import { JOB_TYPES, JOB_CATEGORIES, POSITIONS, ROLES, EMPLOYMENT_TYPES, Staff } from '@/types/staff';
+import RouteGuard from '@/components/RouteGuard';
 export default function EditStaffPage() {
   const router = useRouter();
   const params = useParams();
@@ -167,19 +168,22 @@ export default function EditStaffPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">読み込み中...</p>
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600">読み込み中...</p>
+          </div>
         </div>
-      </div>
+      </RouteGuard>
     );
   }
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <div className="mb-4">
             <svg
               className="mx-auto h-12 w-12 text-green-500"
@@ -199,12 +203,14 @@ export default function EditStaffPage() {
           <p className="text-gray-600">職員情報の更新が完了しました。</p>
         </div>
       </div>
+      </RouteGuard>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+    <RouteGuard>
+      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">職員情報編集</h1>
 
@@ -508,5 +514,6 @@ export default function EditStaffPage() {
         </div>
       </div>
     </div>
+    </RouteGuard>
   );
 }
