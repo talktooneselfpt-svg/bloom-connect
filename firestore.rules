@@ -83,6 +83,36 @@ service cloud.firestore {
       return request.resource.data[field] is bool;
     }
 
+    // データ検証: 有効なステータス値かどうか（billing用）
+    function isValidBillingStatus() {
+      return request.resource.data.status == 'paid' ||
+             request.resource.data.status == 'pending' ||
+             request.resource.data.status == 'overdue' ||
+             request.resource.data.status == 'cancelled';
+    }
+
+    // データ検証: 有効なエラーレベルかどうか
+    function isValidErrorLevel() {
+      return request.resource.data.level == 'error' ||
+             request.resource.data.level == 'warning' ||
+             request.resource.data.level == 'critical';
+    }
+
+    // データ検証: 有効なサービス名かどうか
+    function isValidServiceName() {
+      return request.resource.data.service == 'webApp' ||
+             request.resource.data.service == 'api' ||
+             request.resource.data.service == 'database' ||
+             request.resource.data.service == 'storage';
+    }
+
+    // データ検証: 有効なシステムステータスかどうか
+    function isValidSystemStatus() {
+      return request.resource.data.status == '正常' ||
+             request.resource.data.status == '警告' ||
+             request.resource.data.status == 'エラー';
+    }
+
     // ===================================
     // 事業所コレクション
     // ===================================
@@ -174,7 +204,7 @@ service cloud.firestore {
                        hasRequiredFields(['organizationId', 'organizationName', 'plan',
                                          'amount', 'status', 'billingDate', 'invoiceNumber']) &&
                        isString('status') &&
-                       request.resource.data.status in ['paid', 'pending', 'overdue', 'cancelled'];
+                       isValidBillingStatus();
 
       // 更新: 開発者のみ
       allow update: if isDeveloper();
@@ -190,10 +220,10 @@ service cloud.firestore {
       // 読み取り: 開発者のみ
       allow read: if isDeveloper();
 
-      // 作成: システムのみ（クライアントから作成可能だが、開発者のみが推奨）
+      // 作成: 開発者のみ
       allow create: if isDeveloper() &&
                        hasRequiredFields(['timestamp', 'level', 'message', 'service', 'resolved']) &&
-                       request.resource.data.level in ['error', 'warning', 'critical'] &&
+                       isValidErrorLevel() &&
                        isBool('resolved');
 
       // 更新: 開発者のみ（解決済みフラグの更新など）
@@ -213,8 +243,8 @@ service cloud.firestore {
       // 作成: 開発者のみ
       allow create: if isDeveloper() &&
                        hasRequiredFields(['timestamp', 'service', 'status']) &&
-                       request.resource.data.service in ['webApp', 'api', 'database', 'storage'] &&
-                       request.resource.data.status in ['正常', '警告', 'エラー'];
+                       isValidServiceName() &&
+                       isValidSystemStatus();
 
       // 更新: 開発者のみ
       allow update: if isDeveloper();
