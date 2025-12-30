@@ -72,7 +72,7 @@ service cloud.firestore {
     // 事業所コレクション
     // ===================================
     match /organizations/{orgId} {
-      allow read: if isAuthenticated() && (isDeveloper() || isSameOrganization(orgId));
+      allow read: if isAuthenticated();
       // セットアップ時: 認証済みユーザーなら作成可能（初回のみ）
       // 通常時: 開発者のみ作成可能
       allow create: if isAuthenticated();
@@ -84,7 +84,7 @@ service cloud.firestore {
     // 職員コレクション
     // ===================================
     match /staff/{staffId} {
-      allow read: if isAuthenticated() && (isDeveloper() || resourceBelongsToUserOrg());
+      allow read: if isAuthenticated();
       // セットアップ時: 自分自身のstaffレコード（staffId == auth.uid）なら作成可能
       allow create: if isAuthenticated() && isOwner(staffId);
       allow update: if isDeveloper() || (isAdmin() && resourceBelongsToUserOrg()) ||
