@@ -11,7 +11,7 @@ interface StaffImportRow {
   staffNumber: string
   nameKanji: string
   nameKana: string
-  jobType: string
+  jobTypes: string  // カンマ区切りの文字列
   position: string
   role: string
   department?: string
@@ -47,7 +47,7 @@ export default function StaffImportPage() {
         staffNumber: '001',
         nameKanji: '山田 太郎',
         nameKana: 'やまだ たろう',
-        jobType: '介護福祉士',
+        jobTypes: '介護福祉士,看護師',
         position: 'スタッフ',
         role: 'スタッフ',
         department: '訪問介護部',
@@ -65,7 +65,7 @@ export default function StaffImportPage() {
       'staffNumber',
       'nameKanji',
       'nameKana',
-      'jobType',
+      'jobTypes',
       'position',
       'role',
       'department',
@@ -122,7 +122,7 @@ export default function StaffImportPage() {
           if (!row.nameKanji || !row.nameKana) {
             throw new Error('氏名は必須です')
           }
-          if (!row.jobType) {
+          if (!row.jobTypes) {
             throw new Error('職種は必須です')
           }
           if (!row.position) {
@@ -145,7 +145,7 @@ export default function StaffImportPage() {
             staffNumber: row.staffNumber,
             nameKanji: row.nameKanji,
             nameKana: row.nameKana,
-            jobType: row.jobType,
+            jobTypes: row.jobTypes.split(',').map(j => j.trim()).filter(j => j),
             position: row.position,
             role: row.role,
             phoneCompany: row.phoneCompany,
@@ -264,9 +264,9 @@ export default function StaffImportPage() {
                     <td className="p-2">氏名（ひらがな）</td>
                   </tr>
                   <tr>
-                    <td className="p-2 font-mono">jobType</td>
+                    <td className="p-2 font-mono">jobTypes</td>
                     <td className="p-2 text-red-600">必須</td>
-                    <td className="p-2">職種</td>
+                    <td className="p-2">職種（複数の場合はカンマ区切り、例: 介護福祉士,看護師）</td>
                   </tr>
                   <tr>
                     <td className="p-2 font-mono">position</td>

@@ -17,7 +17,7 @@ export default function EditStaffPage() {
   const [formData, setFormData] = useState({
     nameKanji: '',
     nameKana: '',
-    jobType: '',
+    jobTypes: [] as string[],
     position: '',
     role: '',
     department: '',
@@ -47,7 +47,7 @@ export default function EditStaffPage() {
       setFormData({
         nameKanji: data.nameKanji,
         nameKana: data.nameKana,
-        jobType: data.jobType,
+        jobTypes: data.jobTypes || [],
         position: data.position,
         role: data.role,
         department: data.department || '',
@@ -113,7 +113,7 @@ export default function EditStaffPage() {
       const updateData: any = {
         nameKanji: formData.nameKanji,
         nameKana: formData.nameKana,
-        jobType: formData.jobType,
+        jobTypes: formData.jobTypes,
         position: formData.position,
         role: formData.role,
         phoneCompany: formData.phoneCompany,

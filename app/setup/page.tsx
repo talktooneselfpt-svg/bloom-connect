@@ -107,7 +107,7 @@ export default function SetupPage() {
         staffNumber: '', // 自動生成される
         nameKanji: adminData.nameKanji,
         nameKana: adminData.nameKana,
-        jobType: adminData.jobType,
+        jobTypes: [adminData.jobType], // 配列に変換
         position: adminData.position,
         role: '管理者',
         phoneCompany: adminData.phoneCompany,
