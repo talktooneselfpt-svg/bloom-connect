@@ -117,7 +117,17 @@ export default function StaffDetailPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   職種
                 </label>
-                <p className="text-gray-900">{staff.jobType}</p>
+                <div className="flex flex-wrap gap-1">
+                  {staff.jobTypes && staff.jobTypes.length > 0 ? (
+                    staff.jobTypes.map((job) => (
+                      <span key={job} className="inline-block px-2 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-800">
+                        {job}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-gray-500">未設定</p>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

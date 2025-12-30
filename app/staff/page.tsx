@@ -66,7 +66,7 @@ export default function StaffListPage() {
         const term = searchTerm.toLowerCase();
         const matchName = staff.nameKanji.toLowerCase().includes(term) ||
                           staff.nameKana.toLowerCase().includes(term);
-        const matchJob = staff.jobType.toLowerCase().includes(term);
+        const matchJob = staff.jobTypes.some(job => job.toLowerCase().includes(term));
         const matchPosition = staff.position.toLowerCase().includes(term);
         const matchEmail = staff.email.toLowerCase().includes(term);
 
@@ -221,8 +221,23 @@ export default function StaffListPage() {
                       <div className="text-sm font-medium text-gray-900">{staff.nameKanji}</div>
                       <div className="text-sm text-gray-500">{staff.nameKana}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {staff.jobType}
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      <div className="flex flex-wrap gap-1">
+                        {staff.jobTypes && staff.jobTypes.length > 0 ? (
+                          <>
+                            {staff.jobTypes.slice(0, 2).map((job) => (
+                              <span key={job} className="inline-block px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800">
+                                {job}
+                              </span>
+                            ))}
+                            {staff.jobTypes.length > 2 && (
+                              <span className="text-xs text-gray-500">+{staff.jobTypes.length - 2}</span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-gray-500">未設定</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {staff.position}
