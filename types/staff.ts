@@ -22,8 +22,8 @@ export interface Staff {
   department?: string;
   /** 勤務形態（任意） */
   employmentType?: string;
-  /** 会社用電話番号 */
-  phoneCompany: string;
+  /** 会社用電話番号（任意） */
+  phoneCompany?: string;
   /** 個人用電話番号（任意） */
   phonePersonal?: string;
   /** メールアドレス */
@@ -172,10 +172,7 @@ export const POSITIONS = [
  */
 export const ROLES = [
   '管理者',
-  'マネージャー',
-  'リーダー',
-  'スタッフ',
-  'ビューアー',
+  '一般',
 ] as const;
 
 /**

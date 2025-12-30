@@ -3,28 +3,28 @@
  */
 
 /**
- * 事業所番号を自動生成（6桁以上）
- * 形式: ORG + 6桁のランダム数字（例: ORG123456）
+ * 事業所番号を自動生成（英数字6桁）
+ * 形式: 英数字6桁（例: A1B2C3）
+ * 注意: この番号は変更できません
  */
 export function generateOrganizationCode(): string {
-  const randomDigits = Math.floor(100000 + Math.random() * 900000)
-  return `ORG${randomDigits}`
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // 紛らわしい文字を除外（I, O, 0, 1）
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return code
 }
 
 /**
- * 職員番号を自動生成（英数字5文字）
- * 形式: 大文字アルファベット2文字 + 数字3桁（例: AB123）
+ * 職員番号を自動生成（数字5桁）
+ * 形式: 数字5桁（例: 12345）
+ * 注意: この個人番号は変更できません
  */
 export function generateStaffNumber(): string {
-  // 大文字アルファベット2文字を生成
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  const letter1 = letters.charAt(Math.floor(Math.random() * letters.length))
-  const letter2 = letters.charAt(Math.floor(Math.random() * letters.length))
-
-  // 3桁の数字を生成
-  const numbers = Math.floor(100 + Math.random() * 900)
-
-  return `${letter1}${letter2}${numbers}`
+  // 5桁の数字を生成（10000 ～ 99999）
+  const number = Math.floor(10000 + Math.random() * 90000)
+  return number.toString()
 }
 
 /**

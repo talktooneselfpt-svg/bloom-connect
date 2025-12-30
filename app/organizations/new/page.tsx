@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, FormEvent } from "react"
+import { useState, useEffect, FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { createOrganization, isOrganizationCodeAvailable } from "@/lib/firestore/organizations"
 import { ORGANIZATION_TYPES, ORGANIZATION_CATEGORIES, PREFECTURES } from "@/types/organization"
+import { generateOrganizationCode } from "@/lib/utils/idGenerator"
 import { serverTimestamp } from "firebase/firestore"
 
 export default function NewOrganizationPage() {
@@ -27,6 +28,12 @@ export default function NewOrganizationPage() {
     administratorEmail: "",
     termsAgreed: false
   })
+
+  // 初回マウント時に事業所番号を自動生成
+  useEffect(() => {
+    const code = generateOrganizationCode()
+    setFormData(prev => ({ ...prev, organizationCode: code }))
+  }, [])
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -191,13 +198,11 @@ export default function NewOrganizationPage() {
                     id="organizationCode"
                     name="organizationCode"
                     value={formData.organizationCode}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                    placeholder="例: ORG001"
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-black cursor-not-allowed"
                   />
-                  <p className="mt-1 text-sm text-gray-500">
-                    ログイン時に使用する事業所番号（ユニーク）
+                  <p className="mt-1 text-sm text-red-600 font-medium">
+                    この事業所番号は変更することができません
                   </p>
                 </div>
 

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createStaffWithAuth } from '@/lib/auth/staff';
 import { JOB_TYPES, JOB_CATEGORIES, POSITIONS, ROLES, EMPLOYMENT_TYPES } from '@/types/staff';
 import { generateStaffEmail } from '@/lib/utils/email';
-import { generateTemporaryPassword } from '@/lib/utils/idGenerator';
+import { generateTemporaryPassword, generateStaffNumber } from '@/lib/utils/idGenerator';
 
 export default function NewStaffPage() {
   const router = useRouter();
@@ -30,6 +30,12 @@ export default function NewStaffPage() {
     emergencyContact: '',
     memo: '',
   });
+
+  // 初回マウント時にスタッフ番号を自動生成
+  useEffect(() => {
+    const number = generateStaffNumber();
+    setFormData(prev => ({ ...prev, staffNumber: number }));
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -68,9 +74,6 @@ export default function NewStaffPage() {
       }
       if (!formData.role) {
         throw new Error('権限ロールは必須項目です');
-      }
-      if (!formData.phoneCompany) {
-        throw new Error('会社用電話番号は必須項目です');
       }
 
       // 一時パスワードを生成
@@ -216,13 +219,11 @@ export default function NewStaffPage() {
                 id="staffNumber"
                 name="staffNumber"
                 value={formData.staffNumber}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                placeholder="例: 001"
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-black cursor-not-allowed"
               />
-              <p className="mt-1 text-sm text-gray-500">
-                ログイン時に使用する個人番号を入力してください
+              <p className="mt-1 text-sm text-red-600 font-medium">
+                この個人番号は変更することができません
               </p>
             </div>
 
@@ -401,7 +402,7 @@ export default function NewStaffPage() {
             {/* 会社用電話番号 */}
             <div>
               <label htmlFor="phoneCompany" className="block text-sm font-medium text-gray-700 mb-1">
-                会社用電話番号 <span className="text-red-500">*</span>
+                会社用電話番号（任意）
               </label>
               <input
                 type="tel"
@@ -409,7 +410,6 @@ export default function NewStaffPage() {
                 name="phoneCompany"
                 value={formData.phoneCompany}
                 onChange={handleChange}
-                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="03-1234-5678"
               />

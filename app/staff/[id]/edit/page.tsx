@@ -103,9 +103,6 @@ export default function EditStaffPage() {
       if (!formData.role) {
         throw new Error('権限ロールは必須項目です');
       }
-      if (!formData.phoneCompany) {
-        throw new Error('会社用電話番号は必須項目です');
-      }
       if (!formData.email) {
         throw new Error('メールアドレスは必須項目です');
       }
@@ -381,7 +378,7 @@ export default function EditStaffPage() {
             {/* 会社用電話番号 */}
             <div>
               <label htmlFor="phoneCompany" className="block text-sm font-medium text-gray-700 mb-1">
-                会社用電話番号 <span className="text-red-500">*</span>
+                会社用電話番号（任意）
               </label>
               <input
                 type="tel"
@@ -389,7 +386,6 @@ export default function EditStaffPage() {
                 name="phoneCompany"
                 value={formData.phoneCompany}
                 onChange={handleChange}
-                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="03-1234-5678"
               />

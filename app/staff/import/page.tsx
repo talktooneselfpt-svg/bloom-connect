@@ -131,9 +131,6 @@ export default function StaffImportPage() {
           if (!row.role) {
             throw new Error('権限ロールは必須です')
           }
-          if (!row.phoneCompany) {
-            throw new Error('会社用電話番号は必須です')
-          }
 
           // メールアドレスと一時パスワードを生成
           const email = generateStaffEmail(row.staffNumber, organizationCode)
