@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
+import { useIsAdmin } from "@/lib/hooks/useAuth"
 
 interface NavItem {
   name: string
@@ -14,8 +15,8 @@ export default function Navigation() {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  // TODO: 実際のユーザー権限に基づいて表示を制御
-  const isParentDevice = true // 仮: 後で認証システムから取得
+  // ユーザーのロールに基づいて管理機能の表示を制御
+  const isAdmin = useIsAdmin()
 
   // メイン機能（全ユーザー共通）
   const mainItems: NavItem[] = [
@@ -225,7 +226,7 @@ export default function Navigation() {
           ))}
 
           {/* 親機専用セクション */}
-          {isParentDevice && adminItems.length > 0 && (
+          {isAdmin && adminItems.length > 0 && (
             <>
               <div className="pt-4 pb-2">
                 <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
