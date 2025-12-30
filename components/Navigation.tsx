@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { useIsAdmin } from "@/lib/hooks/useAuth"
+import { useAuth, useIsAdmin } from "@/lib/hooks/useAuth"
 
 interface NavItem {
   name: string
@@ -15,8 +15,35 @@ export default function Navigation() {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+  // 認証状態を取得
+  const { isAuthenticated, isLoading } = useAuth()
+
   // ユーザーのロールに基づいて管理機能の表示を制御
   const isAdmin = useIsAdmin()
+
+  // ローディング中は何も表示しない
+  if (isLoading) {
+    return null
+  }
+
+  // 未ログイン時はログインリンクのみ表示
+  if (!isAuthenticated) {
+    return (
+      <nav className="bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center">
+            <h1 className="text-xl font-bold text-blue-600">ブルームコネクト</h1>
+          </div>
+          <button
+            onClick={() => router.push('/auth/login')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            ログイン
+          </button>
+        </div>
+      </nav>
+    )
+  }
 
   // メイン機能（全ユーザー共通）
   const mainItems: NavItem[] = [
