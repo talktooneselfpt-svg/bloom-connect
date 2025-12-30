@@ -1,4 +1,5 @@
 "use client"
+import RouteGuard from "@/components/RouteGuard"
 
 import { useState } from "react"
 
@@ -77,6 +78,7 @@ export default function MonitoringPage() {
   }
 
   return (
+    <RouteGuard>
     <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* ヘッダー */}
@@ -293,5 +295,6 @@ export default function MonitoringPage() {
         </div>
       </div>
     </div>
+    </RouteGuard>
   )
 }

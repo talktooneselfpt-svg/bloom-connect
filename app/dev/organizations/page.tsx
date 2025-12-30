@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import RouteGuard from "@/components/RouteGuard"
 
 interface Organization {
   id: number
@@ -135,8 +136,9 @@ export default function OrganizationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <RouteGuard>
+      <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">事業所管理</h1>
@@ -288,5 +290,6 @@ export default function OrganizationsPage() {
         )}
       </div>
     </div>
+    </RouteGuard>
   )
 }
