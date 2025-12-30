@@ -1,74 +1,188 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ヘルパー関数：ユーザーが認証済みかどうか
-    function isSignedIn() {
+
+    // ===================================
+    // ヘルパー関数
+    // ===================================
+
+    // ユーザーが認証済みか確認
+    function isAuthenticated() {
       return request.auth != null;
     }
 
-    // ヘルパー関数：ユーザーのロールを取得
-    function getUserRole() {
-      return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role;
-    }
-
-    // ヘルパー関数：管理者かどうか
+    // ユーザーが管理者か確認
     function isAdmin() {
-      return isSignedIn() && getUserRole() == 'admin';
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == '管理者';
     }
 
-    // ヘルパー関数：マネージャー以上かどうか
-    function isManagerOrAbove() {
-      return isSignedIn() && getUserRole() in ['admin', 'manager'];
+    // ユーザーが開発者か確認
+    function isDeveloper() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == '開発者';
     }
 
-    // ヘルパー関数：リーダー以上かどうか
-    function isLeaderOrAbove() {
-      return isSignedIn() && getUserRole() in ['admin', 'manager', 'leader'];
+    // ユーザーが一般か確認
+    function isGeneral() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == '一般';
     }
 
-    // ヘルパー関数：自分自身のデータかどうか
-    function isOwn(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    // 管理者または開発者か確認
+    function isAdminOrDev() {
+      return isAdmin() || isDeveloper();
     }
 
-    // 職員データ（staff コレクション）
+    // 自分自身のデータか確認
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // データが存在するか確認
+    function exists(path) {
+      return exists(/databases/$(database)/documents/$(path));
+    }
+
+    // ===================================
+    // 事業所コレクション
+    // ===================================
+    match /organizations/{orgId} {
+      // 認証済みユーザーは閲覧可能
+      allow read: if isAuthenticated();
+
+      // 管理者と開発者のみ作成・更新・削除可能
+      allow create: if isAdminOrDev();
+      allow update: if isAdminOrDev();
+      allow delete: if isDeveloper(); // 削除は開発者のみ
+    }
+
+    // ===================================
+    // 職員コレクション
+    // ===================================
     match /staff/{staffId} {
-      // 読み取り：認証済みユーザーのみ
-      allow read: if isSignedIn();
+      // 認証済みユーザーは閲覧可能
+      allow read: if isAuthenticated();
 
-      // 作成：管理者またはマネージャーのみ
-      allow create: if isManagerOrAbove();
+      // 管理者と開発者のみ作成・削除可能
+      allow create: if isAdminOrDev();
+      allow delete: if isAdminOrDev();
 
-      // 更新：管理者・マネージャー、またはリーダー以上で自分自身のデータの場合
-      allow update: if isManagerOrAbove() ||
-                       (isLeaderOrAbove() && isOwn(staffId));
-
-      // 削除：管理者のみ
-      allow delete: if isAdmin();
+      // 管理者・開発者は全て更新可能、一般は自分のデータのみ更新可能
+      // ただし、ロール・メール・職員番号は変更不可
+      allow update: if isAdminOrDev() ||
+                      (isOwner(staffId) &&
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'email', 'staffNumber']));
     }
 
-    // 組織データ（organizations コレクション）- 将来の拡張用
-    match /organizations/{organizationId} {
-      // 読み取り：認証済みユーザーのみ
-      allow read: if isSignedIn();
-
-      // 書き込み：管理者のみ
-      allow write: if isAdmin();
-    }
-
-    // 利用者データ（clients コレクション）
+    // ===================================
+    // 利用者コレクション
+    // ===================================
     match /clients/{clientId} {
-      // 読み取り：認証済みユーザーのみ
-      allow read: if isSignedIn();
+      // 認証済みユーザーは閲覧可能
+      allow read: if isAuthenticated();
 
-      // 作成：リーダー以上のみ
-      allow create: if isLeaderOrAbove();
+      // 管理者と開発者のみ作成・更新・削除可能
+      allow create: if isAdminOrDev();
+      allow update: if isAdminOrDev();
+      allow delete: if isAdminOrDev();
+    }
 
-      // 更新：リーダー以上のみ
-      allow update: if isLeaderOrAbove();
+    // ===================================
+    // サブスクリプションコレクション
+    // ===================================
+    match /subscriptions/{subId} {
+      // 認証済みユーザーは閲覧可能
+      allow read: if isAuthenticated();
 
-      // 削除：管理者のみ
-      allow delete: if isAdmin();
+      // 管理者と開発者のみ作成・更新・削除可能
+      allow create: if isAdminOrDev();
+      allow update: if isAdminOrDev();
+      allow delete: if isDeveloper(); // 削除は開発者のみ
+    }
+
+    // ===================================
+    // 通知コレクション
+    // ===================================
+    match /notifications/{notificationId} {
+      // 自分宛の通知のみ読み取り可能
+      allow read: if isAuthenticated() &&
+                    resource.data.userId == request.auth.uid;
+
+      // 管理者と開発者のみ作成・削除可能
+      allow create: if isAdminOrDev();
+      allow delete: if isAdminOrDev();
+
+      // 既読状態の更新は本人のみ可能（readフィールドのみ）
+      allow update: if isAuthenticated() &&
+                      resource.data.userId == request.auth.uid &&
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
+    }
+
+    // ===================================
+    // ユーザー設定コレクション
+    // ===================================
+    match /userSettings/{userId} {
+      // 自分の設定のみ読み取り・更新可能
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+
+      // 開発者は全て閲覧可能
+      allow read: if isDeveloper();
+    }
+
+    // ===================================
+    // お気に入りアプリコレクション
+    // ===================================
+    match /favoriteApps/{userId} {
+      // 自分のお気に入りのみ読み取り・更新可能
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+
+      // 開発者は全て閲覧可能
+      allow read: if isDeveloper();
+    }
+
+    // ===================================
+    // レポートコレクション
+    // ===================================
+    match /reports/{reportId} {
+      // 認証済みユーザーは閲覧可能
+      allow read: if isAuthenticated();
+
+      // 管理者と開発者のみ作成・更新・削除可能
+      allow create: if isAdminOrDev();
+      allow update: if isAdminOrDev();
+      allow delete: if isAdminOrDev();
+    }
+
+    // ===================================
+    // 監査ログコレクション
+    // ===================================
+    match /auditLogs/{logId} {
+      // 開発者のみ閲覧可能
+      allow read: if isDeveloper();
+
+      // システムのみ書き込み可能（クライアントからは書き込み不可）
+      allow write: if false;
+    }
+
+    // ===================================
+    // システム設定コレクション
+    // ===================================
+    match /systemSettings/{settingId} {
+      // 認証済みユーザーは閲覧可能
+      allow read: if isAuthenticated();
+
+      // 開発者のみ更新可能
+      allow write: if isDeveloper();
+    }
+
+    // ===================================
+    // デフォルトルール（すべて拒否）
+    // ===================================
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
