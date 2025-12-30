@@ -171,6 +171,7 @@ export const POSITIONS = [
  * 権限ロールの選択肢
  */
 export const ROLES = [
+  '開発者',
   '管理者',
   '一般',
 ] as const;
