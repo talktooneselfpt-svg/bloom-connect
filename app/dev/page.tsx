@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import RouteGuard from "@/components/RouteGuard"
 
 export default function DevDashboard() {
   const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d">("7d")
@@ -31,8 +32,9 @@ export default function DevDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <RouteGuard>
+      <div className="min-h-screen bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">開発者ダッシュボード</h1>
@@ -200,5 +202,6 @@ export default function DevDashboard() {
         </div>
       </div>
     </div>
+    </RouteGuard>
   )
 }

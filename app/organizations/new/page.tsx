@@ -6,6 +6,7 @@ import { createOrganization, isOrganizationCodeAvailable } from "@/lib/firestore
 import { ORGANIZATION_TYPES, ORGANIZATION_CATEGORIES, PREFECTURES } from "@/types/organization"
 import { generateOrganizationCode } from "@/lib/utils/idGenerator"
 import { serverTimestamp } from "firebase/firestore"
+import RouteGuard from "@/components/RouteGuard"
 
 export default function NewOrganizationPage() {
   const router = useRouter()
@@ -145,35 +146,38 @@ export default function NewOrganizationPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
-          <div className="mb-4">
-            <svg
-              className="mx-auto h-12 w-12 text-green-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+      <RouteGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+            <div className="mb-4">
+              <svg
+                className="mx-auto h-12 w-12 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">登録完了</h2>
+            <p className="text-gray-600">事業所の登録が完了しました。</p>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">登録完了</h2>
-          <p className="text-gray-600">事業所の登録が完了しました。</p>
         </div>
-      </div>
+      </RouteGuard>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">事業所登録</h1>
+    <RouteGuard>
+      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">事業所登録</h1>
 
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -472,5 +476,6 @@ export default function NewOrganizationPage() {
         </div>
       </div>
     </div>
+    </RouteGuard>
   )
 }
