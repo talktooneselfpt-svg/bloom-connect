@@ -6,14 +6,18 @@ import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { createOrganization } from '@/lib/firestore/organizations'
 import { createStaff } from '@/lib/firestore/staff'
+import { createTrialSubscription } from '@/lib/firestore/subscriptions'
+import { createNotification } from '@/lib/firestore/notifications'
+import { createUserSettings } from '@/lib/firestore/userSettings'
 import { JOB_TYPES, POSITIONS } from '@/types/staff'
 import { ORGANIZATION_TYPES, PREFECTURES } from '@/types/organization'
 
 export default function SetupPage() {
   const router = useRouter()
-  const [step, setStep] = useState<1 | 2>(1)
+  const [step, setStep] = useState<1 | 2 | 3>(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [setupComplete, setSetupComplete] = useState(false)
 
   // 事業所情報
   const [orgData, setOrgData] = useState({
@@ -118,8 +122,23 @@ export default function SetupPage() {
         updatedBy: uid,
       })
 
-      // 4. ダッシュボードにリダイレクト
-      router.push('/')
+      // 4. トライアルサブスクリプションを作成
+      await createTrialSubscription(organizationId, uid)
+
+      // 5. デフォルトユーザー設定を作成
+      await createUserSettings(uid)
+
+      // 6. ウェルカム通知を送信
+      await createNotification(
+        uid,
+        'ブルームコネクトへようこそ！',
+        `${orgData.name}の初期セットアップが完了しました。30日間の無料トライアルをお楽しみください。`,
+        'success'
+      )
+
+      // 7. セットアップ完了画面を表示
+      setSetupComplete(true)
+      setStep(3)
     } catch (err: any) {
       console.error('セットアップエラー:', err)
 
@@ -158,11 +177,17 @@ export default function SetupPage() {
             }`}>
               {step === 1 ? '1' : '✓'}
             </div>
-            <div className="w-24 h-1 bg-gray-300 mx-2"></div>
+            <div className={`w-24 h-1 mx-2 ${step >= 2 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-              step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+              step === 2 ? 'bg-blue-600 text-white' : step > 2 ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'
             }`}>
-              2
+              {step > 2 ? '✓' : '2'}
+            </div>
+            <div className={`w-24 h-1 mx-2 ${step >= 3 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+              step === 3 ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'
+            }`}>
+              {step === 3 ? '✓' : '3'}
             </div>
           </div>
         </div>
@@ -420,6 +445,72 @@ export default function SetupPage() {
               {isSubmitting ? '登録中...' : 'セットアップ完了'}
             </button>
           </form>
+        )}
+
+        {/* ステップ3: セットアップ完了 */}
+        {step === 3 && setupComplete && (
+          <div className="text-center space-y-6">
+            {/* 成功アイコン */}
+            <div className="flex justify-center">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* メッセージ */}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                セットアップが完了しました！
+              </h2>
+              <p className="text-gray-600">
+                {orgData.name}のアカウントが作成されました。<br />
+                30日間の無料トライアルを開始します。
+              </p>
+            </div>
+
+            {/* 次のステップ */}
+            <div className="bg-blue-50 rounded-lg p-6 text-left">
+              <h3 className="font-semibold text-gray-900 mb-3">次のステップ</h3>
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>職員を追加して、チームメンバーを招待しましょう</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>利用者情報を登録して、サービスの記録を開始しましょう</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>設定を確認して、事業所情報をカスタマイズしましょう</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* トライアル情報 */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <p className="text-sm text-yellow-800">
+                <strong>トライアル期間:</strong> 今日から30日間<br />
+                トライアル期間中は全機能を無料でお試しいただけます。
+              </p>
+            </div>
+
+            {/* ダッシュボードへ */}
+            <button
+              onClick={() => router.push('/')}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              ダッシュボードへ
+            </button>
+          </div>
         )}
       </div>
     </div>
