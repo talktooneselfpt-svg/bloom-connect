@@ -11,6 +11,11 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // スタッフドキュメントが存在するか確認
+    function staffExists() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+    }
+
     // スタッフデータを取得
     // 注意: この関数は追加のドキュメント読み取りコストがかかります
     // パフォーマンス最適化のため、Firebase Authentication Custom Claims の使用を推奨
@@ -30,17 +35,17 @@ service cloud.firestore {
 
     // 管理者かどうか
     function isAdmin() {
-      return isAuthenticated() && getUserRole() == '管理者';
+      return staffExists() && getUserRole() == '管理者';
     }
 
     // 開発者かどうか
     function isDeveloper() {
-      return isAuthenticated() && getUserRole() == '開発者';
+      return staffExists() && getUserRole() == '開発者';
     }
 
     // 一般ユーザーかどうか
     function isGeneral() {
-      return isAuthenticated() && getUserRole() == '一般';
+      return staffExists() && getUserRole() == '一般';
     }
 
     // 管理者または開発者かどうか
@@ -55,17 +60,17 @@ service cloud.firestore {
 
     // 同じ組織に属しているかどうか
     function isSameOrganization(organizationId) {
-      return isAuthenticated() && getUserOrganizationId() == organizationId;
+      return staffExists() && getUserOrganizationId() == organizationId;
     }
 
     // データが同じ組織に属しているかどうか（既存データ）
     function resourceBelongsToUserOrg() {
-      return resource.data.organizationId == getUserOrganizationId();
+      return staffExists() && resource.data.organizationId == getUserOrganizationId();
     }
 
     // 新規データが同じ組織に属しているかどうか
     function requestBelongsToUserOrg() {
-      return request.resource.data.organizationId == getUserOrganizationId();
+      return staffExists() && request.resource.data.organizationId == getUserOrganizationId();
     }
 
     // ===================================
