@@ -45,7 +45,11 @@ jobs:
       - name: Deploy to Firebase Hosting (Development)
         run: |
           echo "Deploying to development site..."
-          firebase deploy --only hosting:dev-site --non-interactive --project bloom-connect-258b0
+          echo "Checking Firebase configuration..."
+          cat .firebaserc
+          cat firebase.json
+          echo "Starting deployment..."
+          firebase deploy --only hosting:dev-site --non-interactive --debug --project bloom-connect-258b0
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         continue-on-error: false
