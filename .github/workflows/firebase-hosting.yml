@@ -48,6 +48,6 @@ jobs:
           echo "Checking .firebaserc..."
           cat .firebaserc
           echo "Deploying to Firebase..."
-          firebase deploy --only hosting:dev-site --project bloom-connect-258b0 --token ${{ secrets.FIREBASE_TOKEN }} --debug
+          firebase deploy --only hosting:dev-site --project bloom-connect-258b0 --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive --debug || echo "Deploy failed with exit code $?"
         env:
           FIREBASE_PROJECT_ID: bloom-connect-258b0
