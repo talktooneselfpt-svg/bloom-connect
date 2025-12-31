@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { db } from "@/lib/firebase"
+import { db, getCollectionName } from "@/lib/firebase"
 import { collection, query, where, getCountFromServer } from "firebase/firestore"
 
 export default function DashboardPage() {
@@ -34,12 +34,12 @@ export default function DashboardPage() {
         orgCount,
         activeOrgCount
       ] = await Promise.all([
-        getCountFromServer(collection(db, 'staff')),
-        getCountFromServer(query(collection(db, 'staff'), where('isActive', '==', true))),
-        getCountFromServer(collection(db, 'clients')),
-        getCountFromServer(query(collection(db, 'clients'), where('isActive', '==', true))),
-        getCountFromServer(collection(db, 'organizations')),
-        getCountFromServer(query(collection(db, 'organizations'), where('isActive', '==', true)))
+        getCountFromServer(collection(db, getCollectionName('staff'))),
+        getCountFromServer(query(collection(db, getCollectionName('staff')), where('isActive', '==', true))),
+        getCountFromServer(collection(db, getCollectionName('clients'))),
+        getCountFromServer(query(collection(db, getCollectionName('clients')), where('isActive', '==', true))),
+        getCountFromServer(collection(db, getCollectionName('organizations'))),
+        getCountFromServer(query(collection(db, getCollectionName('organizations')), where('isActive', '==', true)))
       ])
 
       setStats({

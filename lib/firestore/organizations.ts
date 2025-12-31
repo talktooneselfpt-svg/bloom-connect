@@ -15,11 +15,9 @@ import {
   serverTimestamp,
   Timestamp
 } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { db, getCollectionName } from "@/lib/firebase"
 import { Organization } from "@/types/organization"
 import { generateOrganizationCode } from "@/lib/utils/idGenerator"
-
-const ORGANIZATIONS_COLLECTION = "organizations"
 
 /**
  * 事業所を新規作成
@@ -27,7 +25,7 @@ const ORGANIZATIONS_COLLECTION = "organizations"
 export async function createOrganization(
   organizationData: Omit<Organization, "id" | "createdAt" | "updatedAt">
 ): Promise<string> {
-  const orgRef = doc(collection(db, ORGANIZATIONS_COLLECTION))
+  const orgRef = doc(collection(db, getCollectionName('organizations')))
 
   // 事業所番号が提供されていない場合は自動生成
   let organizationCode = organizationData.organizationCode
@@ -54,7 +52,7 @@ export async function createOrganization(
  * 事業所情報を取得
  */
 export async function getOrganization(organizationId: string): Promise<Organization | null> {
-  const orgRef = doc(db, ORGANIZATIONS_COLLECTION, organizationId)
+  const orgRef = doc(db, getCollectionName('organizations'), organizationId)
   const orgSnap = await getDoc(orgRef)
 
   if (!orgSnap.exists()) {
@@ -75,7 +73,7 @@ export async function updateOrganization(
   updates: Partial<Omit<Organization, "id" | "createdAt" | "createdBy">>,
   updatedBy?: string
 ): Promise<void> {
-  const orgRef = doc(db, ORGANIZATIONS_COLLECTION, organizationId)
+  const orgRef = doc(db, getCollectionName('organizations'), organizationId)
 
   const updateData: any = {
     ...updates,
@@ -94,7 +92,7 @@ export async function updateOrganization(
  */
 export async function getAllOrganizations(): Promise<Organization[]> {
   const q = query(
-    collection(db, ORGANIZATIONS_COLLECTION),
+    collection(db, getCollectionName('organizations')),
     orderBy("name", "asc")
   )
 
@@ -110,7 +108,7 @@ export async function getAllOrganizations(): Promise<Organization[]> {
  */
 export async function getActiveOrganizations(): Promise<Organization[]> {
   const q = query(
-    collection(db, ORGANIZATIONS_COLLECTION),
+    collection(db, getCollectionName('organizations')),
     where("isActive", "==", true),
     orderBy("name", "asc")
   )
@@ -127,7 +125,7 @@ export async function getActiveOrganizations(): Promise<Organization[]> {
  */
 export async function getOrganizationByCode(organizationCode: string): Promise<Organization | null> {
   const q = query(
-    collection(db, ORGANIZATIONS_COLLECTION),
+    collection(db, getCollectionName('organizations')),
     where("organizationCode", "==", organizationCode)
   )
 
@@ -151,7 +149,7 @@ export async function getOrganizationsByType(
   organizationType: string
 ): Promise<Organization[]> {
   const q = query(
-    collection(db, ORGANIZATIONS_COLLECTION),
+    collection(db, getCollectionName('organizations')),
     where("organizationType", "==", organizationType),
     where("isActive", "==", true),
     orderBy("name", "asc")
@@ -171,7 +169,7 @@ export async function deactivateOrganization(
   organizationId: string,
   updatedBy?: string
 ): Promise<void> {
-  const orgRef = doc(db, ORGANIZATIONS_COLLECTION, organizationId)
+  const orgRef = doc(db, getCollectionName('organizations'), organizationId)
 
   const updateData: any = {
     isActive: false,
@@ -192,7 +190,7 @@ export async function reactivateOrganization(
   organizationId: string,
   updatedBy?: string
 ): Promise<void> {
-  const orgRef = doc(db, ORGANIZATIONS_COLLECTION, organizationId)
+  const orgRef = doc(db, getCollectionName('organizations'), organizationId)
 
   const updateData: any = {
     isActive: true,

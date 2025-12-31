@@ -1,5 +1,5 @@
 import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, getCollectionName } from '@/lib/firebase';
 import { Organization } from '@/types/organization';
 import { Staff } from '@/types/staff';
 import { TrustedDevice } from '@/types/auth';
@@ -10,7 +10,7 @@ import { TrustedDevice } from '@/types/auth';
 export async function getOrganizationByCode(
   organizationCode: string
 ): Promise<Organization | null> {
-  const organizationsRef = collection(db, 'organizations');
+  const organizationsRef = collection(db, getCollectionName('organizations'));
   const q = query(organizationsRef, where('organizationCode', '==', organizationCode));
   const querySnapshot = await getDocs(q);
 
@@ -29,7 +29,7 @@ export async function getStaffByNumber(
   organizationId: string,
   staffNumber: string
 ): Promise<Staff | null> {
-  const staffRef = collection(db, 'staff');
+  const staffRef = collection(db, getCollectionName('staff'));
   const q = query(
     staffRef,
     where('organizationId', '==', organizationId),
@@ -51,7 +51,7 @@ export async function getStaffByNumber(
 export async function registerTrustedDevice(
   device: Omit<TrustedDevice, 'createdAt' | 'lastUsedAt'>
 ): Promise<void> {
-  const deviceRef = doc(db, 'trustedDevices', device.id);
+  const deviceRef = doc(db, getCollectionName('trustedDevices'), device.id);
 
   await setDoc(deviceRef, {
     ...device,
@@ -66,7 +66,7 @@ export async function registerTrustedDevice(
 export async function getTrustedDevice(
   deviceId: string
 ): Promise<TrustedDevice | null> {
-  const deviceRef = doc(db, 'trustedDevices', deviceId);
+  const deviceRef = doc(db, getCollectionName('trustedDevices'), deviceId);
   const deviceSnap = await getDoc(deviceRef);
 
   if (!deviceSnap.exists()) {
@@ -80,7 +80,7 @@ export async function getTrustedDevice(
  * 信頼済みデバイスの最終使用日時を更新
  */
 export async function updateDeviceLastUsed(deviceId: string): Promise<void> {
-  const deviceRef = doc(db, 'trustedDevices', deviceId);
+  const deviceRef = doc(db, getCollectionName('trustedDevices'), deviceId);
 
   await updateDoc(deviceRef, {
     lastUsedAt: serverTimestamp(),
@@ -94,7 +94,7 @@ export async function updateDevicePin(
   deviceId: string,
   pinHash: string
 ): Promise<void> {
-  const deviceRef = doc(db, 'trustedDevices', deviceId);
+  const deviceRef = doc(db, getCollectionName('trustedDevices'), deviceId);
 
   await updateDoc(deviceRef, {
     pinHash,
@@ -108,7 +108,7 @@ export async function updateDeviceBiometric(
   deviceId: string,
   credentialId: string
 ): Promise<void> {
-  const deviceRef = doc(db, 'trustedDevices', deviceId);
+  const deviceRef = doc(db, getCollectionName('trustedDevices'), deviceId);
 
   await updateDoc(deviceRef, {
     biometricEnabled: true,
@@ -122,7 +122,7 @@ export async function updateDeviceBiometric(
 export async function getStaffTrustedDevices(
   staffUid: string
 ): Promise<TrustedDevice[]> {
-  const devicesRef = collection(db, 'trustedDevices');
+  const devicesRef = collection(db, getCollectionName('trustedDevices'));
   const q = query(devicesRef, where('staffUid', '==', staffUid));
   const querySnapshot = await getDocs(q);
 
