@@ -41,6 +41,13 @@ jobs:
       - name: Deploy to Firebase Dev Site
         run: |
           npm install -g firebase-tools
-          firebase deploy --only hosting:dev-site --project bloom-connect-258b0 --token ${{ secrets.FIREBASE_TOKEN }}
+          echo "Checking out directory structure..."
+          ls -la out || echo "out directory not found"
+          echo "Checking firebase.json..."
+          cat firebase.json
+          echo "Checking .firebaserc..."
+          cat .firebaserc
+          echo "Deploying to Firebase..."
+          firebase deploy --only hosting:dev-site --project bloom-connect-258b0 --token ${{ secrets.FIREBASE_TOKEN }} --debug
         env:
           FIREBASE_PROJECT_ID: bloom-connect-258b0
