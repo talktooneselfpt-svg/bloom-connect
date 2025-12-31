@@ -24,7 +24,7 @@ let auth: Auth
 if (typeof window !== 'undefined' || isConfigured) {
   // クライアントサイドまたは環境変数が設定されている場合
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
-  db = getFirestore(app)
+  db = getFirestore(app, 'bloomconect')  // bloomconect データベースを使用
   auth = getAuth(app)
 } else {
   // ビルド時のダミーオブジェクト（実際には使用されない）
