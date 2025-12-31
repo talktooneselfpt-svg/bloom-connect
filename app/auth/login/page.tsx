@@ -8,11 +8,11 @@ import { doc, getDoc } from 'firebase/firestore';
 import { getOrganizationByCode, getStaffByNumber, getTrustedDevice, registerTrustedDevice, updateDeviceLastUsed } from '@/lib/firestore/auth';
 import { getOrCreateDeviceId, generateDeviceFingerprint, hashPin, verifyPin, isBiometricAvailable, authenticateWithBiometric } from '@/lib/auth/device';
 
-type LoginMode = 'full' | 'pin' | 'biometric';
+type LoginMode = 'full' | 'pin' | 'biometric' | 'admin';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [loginMode, setLoginMode] = useState<LoginMode>('full');
+  const [loginMode, setLoginMode] = useState<LoginMode>('admin'); // デフォルトを管理者モードに
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
@@ -24,6 +24,12 @@ export default function LoginPage() {
     staffNumber: '',
     password: '',
     rememberDevice: false,
+  });
+
+  // 管理者認証用
+  const [adminAuthData, setAdminAuthData] = useState({
+    email: '',
+    password: '',
   });
 
   // PIN認証用
@@ -114,6 +120,32 @@ export default function LoginPage() {
     }
   };
 
+  const handleAdminAuth = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      // Firebase Authentication で直接ログイン（管理者用）
+      await signInWithEmailAndPassword(auth, adminAuthData.email, adminAuthData.password);
+
+      // ダッシュボードにリダイレクト
+      router.push('/');
+    } catch (err: any) {
+      if (err.code === 'auth/wrong-password') {
+        setError('パスワードが正しくありません');
+      } else if (err.code === 'auth/user-not-found') {
+        setError('メールアドレスが見つかりません');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('メールアドレスの形式が正しくありません');
+      } else {
+        setError(err.message || 'ログインに失敗しました');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handlePinAuth = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -186,43 +218,97 @@ export default function LoginPage() {
         )}
 
         {/* タブ切り替え */}
-        {trustedDevice && (
-          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
-            {trustedDevice.pinHash && (
-              <button
-                onClick={() => setLoginMode('pin')}
-                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                  loginMode === 'pin'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                PIN
-              </button>
-            )}
-            {trustedDevice.biometricEnabled && isBiometricAvailable() && (
-              <button
-                onClick={() => setLoginMode('biometric')}
-                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                  loginMode === 'biometric'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                生体認証
-              </button>
-            )}
+        <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setLoginMode('admin')}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+              loginMode === 'admin'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            管理者
+          </button>
+          <button
+            onClick={() => setLoginMode('full')}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+              loginMode === 'full'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            職員
+          </button>
+          {trustedDevice && trustedDevice.pinHash && (
             <button
-              onClick={() => setLoginMode('full')}
+              onClick={() => setLoginMode('pin')}
               className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                loginMode === 'full'
+                loginMode === 'pin'
                   ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              通常
+              PIN
             </button>
-          </div>
+          )}
+          {trustedDevice && trustedDevice.biometricEnabled && isBiometricAvailable() && (
+            <button
+              onClick={() => setLoginMode('biometric')}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+                loginMode === 'biometric'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              生体認証
+            </button>
+          )}
+        </div>
+
+        {/* 管理者ログインフォーム */}
+        {loginMode === 'admin' && (
+          <form onSubmit={handleAdminAuth} className="space-y-4">
+            <div>
+              <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                メールアドレス
+              </label>
+              <input
+                type="email"
+                id="adminEmail"
+                value={adminAuthData.email}
+                onChange={(e) => setAdminAuthData({ ...adminAuthData, email: e.target.value })}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                placeholder="admin@example.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                パスワード
+              </label>
+              <input
+                type="password"
+                id="adminPassword"
+                value={adminAuthData.password}
+                onChange={(e) => setAdminAuthData({ ...adminAuthData, password: e.target.value })}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                placeholder="パスワードを入力"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
+            >
+              {isSubmitting && (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              )}
+              {isSubmitting ? 'ログイン中...' : '管理者ログイン'}
+            </button>
+          </form>
         )}
 
         {/* 完全認証フォーム */}
