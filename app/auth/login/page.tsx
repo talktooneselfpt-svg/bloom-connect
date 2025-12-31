@@ -3,7 +3,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, getCollectionName } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { getOrganizationByCode, getStaffByNumber, getTrustedDevice, registerTrustedDevice, updateDeviceLastUsed } from '@/lib/firestore/auth';
 import { getOrCreateDeviceId, generateDeviceFingerprint, hashPin, verifyPin, isBiometricAvailable, authenticateWithBiometric } from '@/lib/auth/device';
@@ -85,7 +85,7 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, staff.email, fullAuthData.password);
 
       // 4. パスワード設定完了フラグをチェック
-      const staffDoc = await getDoc(doc(db, 'staff', userCredential.user.uid));
+      const staffDoc = await getDoc(doc(db, getCollectionName('staff'), userCredential.user.uid));
       const staffData = staffDoc.data();
 
       if (staffData && !staffData.passwordSetupCompleted) {

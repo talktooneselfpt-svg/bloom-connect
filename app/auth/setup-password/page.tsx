@@ -3,7 +3,7 @@
 import { useState, FormEvent, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { updatePassword } from 'firebase/auth'
-import { auth, db } from '@/lib/firebase'
+import { auth, db, getCollectionName } from '@/lib/firebase'
 import { doc, updateDoc } from 'firebase/firestore'
 
 export default function SetupPasswordPage() {
@@ -54,7 +54,7 @@ export default function SetupPasswordPage() {
       await updatePassword(user, passwordData.newPassword)
 
       // Firestore の職員データを更新（passwordSetupCompleted を true に設定）
-      const staffRef = doc(db, 'staff', user.uid)
+      const staffRef = doc(db, getCollectionName('staff'), user.uid)
       await updateDoc(staffRef, {
         passwordSetupCompleted: true,
         updatedAt: new Date().toISOString(),

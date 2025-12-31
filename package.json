@@ -5,8 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:dev": "NODE_ENV=development next build",
+    "build:prod": "NODE_ENV=production next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy:dev": "npm run build:dev && firebase deploy --only hosting:dev-site",
+    "deploy:prod": "npm run build:prod && firebase deploy --only hosting:prod-site"
   },
   "dependencies": {
     "firebase": "^11.1.0",

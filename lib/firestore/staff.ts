@@ -1,5 +1,5 @@
 import { doc, setDoc, serverTimestamp, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, getCollectionName } from '@/lib/firebase';
 import { Staff } from '@/types/staff';
 import { generateStaffNumber } from '@/lib/utils/idGenerator';
 
@@ -12,7 +12,7 @@ export async function createStaff(
   staffId: string,
   data: Omit<Staff, 'createdAt' | 'updatedAt'>
 ): Promise<void> {
-  const staffRef = doc(db, 'staff', staffId);
+  const staffRef = doc(db, getCollectionName('staff'), staffId);
 
   // 職員番号が提供されていない場合は自動生成
   let staffNumber = data.staffNumber
@@ -39,7 +39,7 @@ export async function createStaff(
  * @returns 職員データ、存在しない場合は null
  */
 export async function getStaff(staffId: string): Promise<Staff | null> {
-  const staffRef = doc(db, 'staff', staffId);
+  const staffRef = doc(db, getCollectionName('staff'), staffId);
   const staffSnap = await getDoc(staffRef);
 
   if (!staffSnap.exists()) {
@@ -58,7 +58,7 @@ export async function updateStaff(
   staffId: string,
   data: Partial<Omit<Staff, 'createdAt' | 'updatedAt' | 'createdBy'>>
 ): Promise<void> {
-  const staffRef = doc(db, 'staff', staffId);
+  const staffRef = doc(db, getCollectionName('staff'), staffId);
 
   await updateDoc(staffRef, {
     ...data,
@@ -71,7 +71,7 @@ export async function updateStaff(
  * @returns 職員データの配列
  */
 export async function getAllStaff(): Promise<Staff[]> {
-  const staffCollection = collection(db, 'staff');
+  const staffCollection = collection(db, getCollectionName('staff'));
   const querySnapshot = await getDocs(staffCollection);
 
   return querySnapshot.docs.map(doc => doc.data() as Staff);
@@ -85,7 +85,7 @@ export async function getAllStaff(): Promise<Staff[]> {
 export async function getStaffByOrganization(
   organizationId: string
 ): Promise<Staff[]> {
-  const staffCollection = collection(db, 'staff');
+  const staffCollection = collection(db, getCollectionName('staff'));
   const q = query(staffCollection, where('organizationId', '==', organizationId));
   const querySnapshot = await getDocs(q);
 
@@ -100,7 +100,7 @@ export async function getStaffByOrganization(
 export async function getActiveStaff(
   organizationId: string
 ): Promise<Staff[]> {
-  const staffCollection = collection(db, 'staff');
+  const staffCollection = collection(db, getCollectionName('staff'));
   const q = query(
     staffCollection,
     where('organizationId', '==', organizationId),

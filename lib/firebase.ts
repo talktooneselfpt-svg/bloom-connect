@@ -33,4 +33,15 @@ if (typeof window !== 'undefined' || isConfigured) {
   auth = {} as Auth
 }
 
+// 環境判定
+export const getAppEnv = (): 'development' | 'production' => {
+  return (process.env.NEXT_PUBLIC_APP_ENV as 'development' | 'production') || 'development'
+}
+
+// 環境に応じたコレクション名を取得
+export const getCollectionName = (baseName: string): string => {
+  const env = getAppEnv()
+  return env === 'production' ? baseName : `dev_${baseName}`
+}
+
 export { app, db, auth }

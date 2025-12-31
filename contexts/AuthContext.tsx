@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth'
-import { auth, db } from '@/lib/firebase'
+import { auth, db, getCollectionName } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
 import { Staff } from '@/types/staff'
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user) {
         // ユーザーがログインしている場合、Firestoreから職員データを取得
         try {
-          const staffDoc = await getDoc(doc(db, 'staff', user.uid))
+          const staffDoc = await getDoc(doc(db, getCollectionName('staff'), user.uid))
           if (staffDoc.exists()) {
             setStaffData(staffDoc.data() as Staff)
           } else {
