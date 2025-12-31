@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:dev": "NODE_ENV=development next build",
-    "build:prod": "NODE_ENV=production next build",
+    "build:dev": "next build",
+    "build:prod": "next build",
     "start": "next start",
     "lint": "eslint",
     "deploy:dev": "npm run build:dev && firebase deploy --only hosting:dev-site",
