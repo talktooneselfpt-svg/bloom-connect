@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface NavItem {
   name: string
@@ -13,6 +14,21 @@ export default function Navigation() {
   const router = useRouter()
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { staffData, signOut } = useAuth()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  const handleSignOut = async () => {
+    if (confirm('ログアウトしますか？')) {
+      setIsLoggingOut(true)
+      try {
+        await signOut()
+      } catch (error) {
+        console.error('ログアウトエラー:', error)
+        alert('ログアウトに失敗しました')
+        setIsLoggingOut(false)
+      }
+    }
+  }
 
   const navItems: NavItem[] = [
     {
@@ -122,11 +138,49 @@ export default function Navigation() {
           ))}
         </div>
 
-        {/* フッター */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
-            © 2025 ブルームコネクト
-          </p>
+        {/* ユーザー情報 & ログアウト */}
+        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200">
+          {staffData && (
+            <div className="p-4 bg-gray-50">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                  {staffData.nameKanji?.charAt(0) || 'U'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {staffData.nameKanji}
+                  </p>
+                  <p className="text-xs text-gray-600 truncate">
+                    {staffData.role || '管理者'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleSignOut}
+                disabled={isLoggingOut}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                {isLoggingOut ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-700"></div>
+                    <span>ログアウト中...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>ログアウト</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+          <div className="p-3">
+            <p className="text-xs text-gray-500 text-center">
+              © 2025 ブルームコネクト
+            </p>
+          </div>
         </div>
       </nav>
     </>
