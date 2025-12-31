@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "default": "bloom-connect-258b0"
+  },
+  "targets": {
+    "bloom-connect-258b0": {
+      "hosting": {
+        "dev-site": [
+          "bloom-connect-dev"
+        ],
+        "prod-site": [
+          "bloom-connect-258b0"
+        ]
+      }
+    }
+  }
+}
