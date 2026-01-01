@@ -3,6 +3,7 @@
  */
 
 import { Timestamp } from "firebase/firestore"
+import { ServiceType } from './services';
 
 /**
  * 規約同意情報
@@ -32,7 +33,7 @@ export interface Organization {
 
   // 事業所種別・特性
   organizationType: string // 事業所種別（訪問看護、訪問介護等）
-  services?: string[] // 提供サービス一覧
+  services?: ServiceType[] // 提供サービス一覧
 
   // 管理者情報
   administratorName: string // 管理者名（責任者の特定）
@@ -46,11 +47,90 @@ export interface Organization {
 
   // システム情報
   isActive: boolean // 有効状態
-  plan?: string // プラン（free, basic, premium など）
+  plan: 'demo' | 'subscription' // プラン（デモ / サブスクリプション）
+  staffCount?: number // 登録職員数（料金計算用）
+  subscriptionStartDate?: Timestamp // サブスク開始日
+  subscriptionEndDate?: Timestamp // サブスク終了日（トライアル終了日）
+  paymentStatus?: 'active' | 'overdue' | 'suspended' // 支払い状態
+  stripeCustomerId?: string // Stripe 顧客 ID
+  stripeSubscriptionId?: string // Stripe サブスクリプション ID
   createdAt: Timestamp // 作成日時
   updatedAt: Timestamp // 更新日時
   createdBy?: string // 作成者
   updatedBy?: string // 更新者
+}
+
+/**
+ * 料金プラン
+ */
+export interface PricingPlan {
+  planType: 'demo' | 'subscription'
+  basePrice: number // 基本料金
+  additionalStaffPrice: number // 追加職員料金（10人ごと）
+  freeStaffLimit: number // 無料範囲の職員数
+  features: string[] // プラン機能
+}
+
+/**
+ * デモプラン: 無料・機能制限あり
+ */
+export const DEMO_PLAN: PricingPlan = {
+  planType: 'demo',
+  basePrice: 0,
+  additionalStaffPrice: 0,
+  freeStaffLimit: 5, // デモは5人まで
+  features: [
+    '職員登録（最大5人）',
+    '利用者登録（最大10人）',
+    '基本機能のみ',
+    'データ保存期間: 30日',
+  ],
+};
+
+/**
+ * サブスクプラン: 職員数に応じた従量課金
+ * - 20人以下: 基本料金 2,000円/月
+ * - 21人以上: 基本料金 2,000円 + 10人ごとに 1,000円
+ */
+export const SUBSCRIPTION_PLAN: PricingPlan = {
+  planType: 'subscription',
+  basePrice: 2000, // 基本料金 2,000円
+  additionalStaffPrice: 1000, // 10人ごとに 1,000円
+  freeStaffLimit: 20, // 20人までは基本料金のみ
+  features: [
+    '無制限の職員登録',
+    '無制限の利用者登録',
+    'すべての機能',
+    'データ無期限保存',
+    'CSVインポート/エクスポート',
+    'メールサポート',
+  ],
+};
+
+/**
+ * 月額料金を計算
+ * @param staffCount 登録職員数
+ * @param plan プラン種別
+ * @returns 月額料金（円）
+ */
+export function calculateMonthlyPrice(staffCount: number, plan: 'demo' | 'subscription'): number {
+  if (plan === 'demo') {
+    return 0;
+  }
+
+  // サブスクプラン
+  const basePlan = SUBSCRIPTION_PLAN;
+
+  if (staffCount <= basePlan.freeStaffLimit) {
+    // 20人以下: 基本料金のみ
+    return basePlan.basePrice;
+  }
+
+  // 21人以上: 基本料金 + (超過人数 / 10) * 追加料金
+  const excessStaff = staffCount - basePlan.freeStaffLimit;
+  const additionalUnits = Math.ceil(excessStaff / 10);
+
+  return basePlan.basePrice + (additionalUnits * basePlan.additionalStaffPrice);
 }
 
 // 事業所種別の選択肢

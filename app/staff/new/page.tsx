@@ -4,11 +4,15 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createStaffWithAuth } from '@/lib/auth/staff';
 import { JOB_TYPES, POSITIONS, ROLES, EMPLOYMENT_TYPES } from '@/types/staff';
+import { ALL_QUALIFICATIONS } from '@/types/qualifications';
 import { generateStaffEmail } from '@/lib/utils/email';
 import { generateTemporaryPassword } from '@/lib/utils/idGenerator';
+import MultiSelectCheckbox from '@/components/MultiSelectCheckbox';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export default function NewStaffPage() {
   const router = useRouter();
+  const { organization, user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -18,7 +22,8 @@ export default function NewStaffPage() {
     staffNumber: '',
     nameKanji: '',
     nameKana: '',
-    jobType: '',
+    jobTypes: [] as string[],
+    qualifications: [] as string[],
     position: '',
     role: '',
     department: '',
@@ -51,8 +56,8 @@ export default function NewStaffPage() {
       if (!formData.nameKanji || !formData.nameKana) {
         throw new Error('氏名は必須項目です');
       }
-      if (!formData.jobType) {
-        throw new Error('職種は必須項目です');
+      if (!formData.jobTypes || formData.jobTypes.length === 0) {
+        throw new Error('職種は必須項目です（最低1つ選択してください）');
       }
       if (!formData.position) {
         throw new Error('役職は必須項目です');
@@ -64,33 +69,37 @@ export default function NewStaffPage() {
         throw new Error('会社用電話番号は必須項目です');
       }
 
+      if (!organization?.id || !user?.uid) {
+        throw new Error('組織情報またはユーザー情報が取得できません');
+      }
+
       // 一時パスワードを生成
       const tempPassword = generateTemporaryPassword();
       setTemporaryPassword(tempPassword);
 
-      // 仮のデータ（実際にはログインユーザー情報を使用）
-      const currentUserId = 'temp-user-id'; // TODO: 実際のユーザーIDに置き換え
-      const organizationId = 'temp-org-id'; // TODO: 実際の組織IDに置き換え
-      const organizationCode = 'ORG001'; // TODO: 実際の事業所コードに置き換え
-
       // メールアドレスを自動生成
-      const email = generateStaffEmail(formData.staffNumber, organizationCode);
+      const email = generateStaffEmail(formData.staffNumber, organization.organizationCode);
 
       // 任意フィールドの処理（空文字列の場合はプロパティ自体を含めない）
       const staffData: any = {
-        organizationId,
+        organizationId: organization.id,
         staffNumber: formData.staffNumber,
         nameKanji: formData.nameKanji,
         nameKana: formData.nameKana,
-        jobType: formData.jobType,
+        jobTypes: formData.jobTypes,
         position: formData.position,
         role: formData.role,
         phoneCompany: formData.phoneCompany,
         email,
         isActive: true,
         passwordSetupCompleted: false, // 初回ログイン時にパスワード設定が必要
-        createdBy: currentUserId,
-        updatedBy: currentUserId,
+        createdBy: user.uid,
+        updatedBy: user.uid,
+      }
+
+      // 資格が選択されている場合のみ追加
+      if (formData.qualifications && formData.qualifications.length > 0) {
+        staffData.qualifications = formData.qualifications;
       }
 
       // 任意フィールドが入力されている場合のみ追加
@@ -251,26 +260,29 @@ export default function NewStaffPage() {
               />
             </div>
 
-            {/* 職種 */}
+            {/* 職種（複数選択） */}
             <div>
-              <label htmlFor="jobType" className="block text-sm font-medium text-gray-700 mb-1">
-                職種 <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="jobType"
-                name="jobType"
-                value={formData.jobType}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-              >
-                <option value="">選択してください</option>
-                {JOB_TYPES.map(jobType => (
-                  <option key={jobType} value={jobType}>
-                    {jobType}
-                  </option>
-                ))}
-              </select>
+              <MultiSelectCheckbox
+                label="職種（複数選択可）"
+                options={JOB_TYPES}
+                selectedValues={formData.jobTypes}
+                onChange={(values) => setFormData(prev => ({ ...prev, jobTypes: values }))}
+                searchable
+              />
+              {formData.jobTypes.length === 0 && (
+                <p className="mt-1 text-sm text-red-500">※ 最低1つ選択してください</p>
+              )}
+            </div>
+
+            {/* 保有資格（複数選択） */}
+            <div>
+              <MultiSelectCheckbox
+                label="保有資格（任意・複数選択可）"
+                options={ALL_QUALIFICATIONS}
+                selectedValues={formData.qualifications}
+                onChange={(values) => setFormData(prev => ({ ...prev, qualifications: values }))}
+                searchable
+              />
             </div>
 
             {/* 役職 */}

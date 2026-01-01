@@ -1,3 +1,5 @@
+import { Qualification, Position } from './qualifications';
+
 /**
  * 職員データの型定義
  */
@@ -12,8 +14,10 @@ export interface Staff {
   nameKanji: string;
   /** 氏名（ひらがな） */
   nameKana: string;
-  /** 職種 */
-  jobType: string;
+  /** 職種（複数選択可能） */
+  jobTypes: string[];
+  /** 保有資格（複数選択可能） */
+  qualifications?: string[];
   /** 役職 */
   position: string;
   /** 権限ロール */
@@ -55,40 +59,9 @@ export interface Staff {
 }
 
 /**
- * 職種の選択肢
+ * 職種の選択肢（ALL_POSITIONS から再エクスポート）
  */
-export const JOB_TYPES = [
-  '医師',
-  '看護師',
-  '准看護師',
-  '保健師',
-  '助産師',
-  '理学療法士（PT）',
-  '作業療法士（OT）',
-  '言語聴覚士（ST）',
-  '臨床検査技師',
-  '臨床工学技士',
-  '放射線技師',
-  '薬剤師',
-  '管理栄養士',
-  '栄養士',
-  '介護福祉士',
-  '初任者研修（旧ヘルパー2級）',
-  '実務者研修',
-  '生活相談員',
-  'ケアマネジャー（介護支援専門員）',
-  'サービス提供責任者',
-  '相談支援専門員',
-  '社会福祉士',
-  '精神保健福祉士',
-  '保育士',
-  '児童指導員',
-  '生活支援員',
-  '就労支援員',
-  'ドライバー',
-  '事務職',
-  'その他（自由記載）',
-] as const;
+export { ALL_POSITIONS as JOB_TYPES } from './qualifications';
 
 /**
  * 役職の選択肢
@@ -100,7 +73,7 @@ export const POSITIONS = [
   '主任',
   'リーダー',
   'サブリーダー',
-  'サービス提供責任者',
+  'サービス提供責任者（サ責）',
   'スタッフ',
   'パートスタッフ',
   '事務',
@@ -130,7 +103,6 @@ export const EMPLOYMENT_TYPES = [
   '派遣',
 ] as const;
 
-export type JobType = typeof JOB_TYPES[number];
-export type Position = typeof POSITIONS[number];
+export type StaffPosition = typeof POSITIONS[number];
 export type Role = typeof ROLES[number];
 export type EmploymentType = typeof EMPLOYMENT_TYPES[number];
