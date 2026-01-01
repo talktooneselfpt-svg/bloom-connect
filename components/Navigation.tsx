@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
+import { useAuth } from "@/lib/contexts/AuthContext"
 
 interface NavItem {
   name: string
@@ -12,7 +13,9 @@ interface NavItem {
 export default function Navigation() {
   const router = useRouter()
   const pathname = usePathname()
+  const { staff, organization, signOut, isAuthenticated } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const navItems: NavItem[] = [
     {
@@ -58,6 +61,23 @@ export default function Navigation() {
       return pathname === "/"
     }
     return pathname.startsWith(path)
+  }
+
+  const handleSignOut = async () => {
+    if (!confirm('ログアウトしますか？')) {
+      return
+    }
+
+    try {
+      setIsLoggingOut(true)
+      await signOut()
+      router.push('/auth/login')
+    } catch (error) {
+      console.error('ログアウトエラー:', error)
+      alert('ログアウトに失敗しました')
+    } finally {
+      setIsLoggingOut(false)
+    }
   }
 
   return (
@@ -121,6 +141,29 @@ export default function Navigation() {
             </button>
           ))}
         </div>
+
+        {/* ユーザー情報とログアウト */}
+        {isAuthenticated && staff && (
+          <div className="absolute bottom-16 left-0 right-0 p-4 border-t border-gray-200">
+            <div className="mb-3">
+              <p className="text-xs text-gray-500">ログイン中</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{staff.nameKanji}</p>
+              {organization && (
+                <p className="text-xs text-gray-500 truncate">{organization.name}</p>
+              )}
+            </div>
+            <button
+              onClick={handleSignOut}
+              disabled={isLoggingOut}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>{isLoggingOut ? 'ログアウト中...' : 'ログアウト'}</span>
+            </button>
+          </div>
+        )}
 
         {/* フッター */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">

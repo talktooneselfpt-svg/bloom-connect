@@ -1,22 +1,33 @@
 'use client';
 
 import { useState, FormEvent, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { getOrganizationByCode, getStaffByNumber, getTrustedDevice, registerTrustedDevice, updateDeviceLastUsed } from '@/lib/firestore/auth';
 import { getOrCreateDeviceId, generateDeviceFingerprint, hashPin, verifyPin, isBiometricAvailable, authenticateWithBiometric } from '@/lib/auth/device';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 type LoginMode = 'full' | 'pin' | 'biometric';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [loginMode, setLoginMode] = useState<LoginMode>('full');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [trustedDevice, setTrustedDevice] = useState<any>(null);
+
+  // すでにログイン済みの場合はリダイレクト
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      const returnUrl = searchParams.get('returnUrl') || '/';
+      router.push(returnUrl);
+    }
+  }, [isAuthenticated, authLoading, router, searchParams]);
 
   // 完全認証用
   const [fullAuthData, setFullAuthData] = useState({
@@ -101,8 +112,9 @@ export default function LoginPage() {
         });
       }
 
-      // 6. ホームページにリダイレクト
-      router.push('/staff');
+      // 6. ログイン成功 - AuthContextが自動的にユーザー情報を読み込む
+      const returnUrl = searchParams.get('returnUrl') || '/';
+      router.push(returnUrl);
     } catch (err: any) {
       if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
         setError('パスワードが正しくありません');
@@ -134,8 +146,9 @@ export default function LoginPage() {
       await updateDeviceLastUsed(deviceId!);
 
       // TODO: 自動ログイン処理（Firebase Auth のカスタムトークンを使用）
-      // 現時点では仮実装
-      router.push('/staff');
+      // 現時点では仮実装 - AuthContextが自動的にユーザー情報を読み込む
+      const returnUrl = searchParams.get('returnUrl') || '/';
+      router.push(returnUrl);
     } catch (err: any) {
       setError(err.message || 'PIN認証に失敗しました');
     } finally {
@@ -162,7 +175,9 @@ export default function LoginPage() {
       await updateDeviceLastUsed(deviceId!);
 
       // TODO: 自動ログイン処理（Firebase Auth のカスタムトークンを使用）
-      router.push('/staff');
+      // 現時点では仮実装 - AuthContextが自動的にユーザー情報を読み込む
+      const returnUrl = searchParams.get('returnUrl') || '/';
+      router.push(returnUrl);
     } catch (err: any) {
       setError(err.message || '生体認証に失敗しました');
     } finally {
