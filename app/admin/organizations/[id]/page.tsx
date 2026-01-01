@@ -234,8 +234,8 @@ export default function OrganizationDetailPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {staff.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{s.name}</td>
+                  <tr key={s.uid} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{s.nameKanji}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{s.staffNumber}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{s.position || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -277,7 +277,7 @@ export default function OrganizationDetailPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {clients.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{c.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{c.nameKanji}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {c.birthDate ? `${Math.floor((new Date().getTime() - new Date(c.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000))}歳` : '-'}
                     </td>
