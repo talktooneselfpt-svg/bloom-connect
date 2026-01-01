@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { db, getCollectionName } from "@/lib/firebase"
 import { collection, query, where, getCountFromServer, getDocs, orderBy, limit } from "firebase/firestore"
-import type { Organization } from "@/types"
+import type { Organization } from "@/types/organization"
 
 interface DashboardStats {
   totalOrganizations: number
@@ -199,7 +199,7 @@ export default function AdminDashboardPage() {
                     <div className={`w-2 h-2 rounded-full ${org.isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                     <div>
                       <p className="font-medium text-gray-900">{org.name}</p>
-                      <p className="text-xs text-gray-600">{org.type}</p>
+                      <p className="text-xs text-gray-600">{org.organizationType}</p>
                     </div>
                   </div>
                   <span className="text-xs text-gray-500">
