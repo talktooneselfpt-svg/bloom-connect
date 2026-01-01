@@ -6,6 +6,7 @@ import { csvToObjects, downloadCSV, objectsToCSV } from '@/lib/utils/csvParser'
 import { createStaffWithAuth } from '@/lib/auth/staff'
 import { generateStaffEmail } from '@/lib/utils/email'
 import { generateTemporaryPassword } from '@/lib/utils/idGenerator'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface StaffImportRow {
   staffNumber: string
@@ -35,6 +36,7 @@ interface ImportResult {
 
 export default function StaffImportPage() {
   const router = useRouter()
+  const { user, organization } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [results, setResults] = useState<ImportResult[]>([])
@@ -105,10 +107,13 @@ export default function StaffImportPage() {
       const data = csvToObjects<StaffImportRow>(csvText)
       const importResults: ImportResult[] = []
 
-      // 仮データ（実際にはログインユーザー情報を使用）
-      const currentUserId = 'temp-user-id'
-      const organizationId = 'temp-org-id'
-      const organizationCode = 'ORG001'
+      // 認証情報の確認
+      if (!user?.uid) {
+        throw new Error('ユーザー情報の取得に失敗しました')
+      }
+      if (!organization?.id || !organization?.organizationCode) {
+        throw new Error('組織情報の取得に失敗しました')
+      }
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i]
@@ -136,12 +141,12 @@ export default function StaffImportPage() {
           }
 
           // メールアドレスと一時パスワードを生成
-          const email = generateStaffEmail(row.staffNumber, organizationCode)
+          const email = generateStaffEmail(row.staffNumber, organization.organizationCode)
           const tempPassword = generateTemporaryPassword()
 
           // 職員データを準備
           const staffData: any = {
-            organizationId,
+            organizationId: organization.id,
             staffNumber: row.staffNumber,
             nameKanji: row.nameKanji,
             nameKana: row.nameKana,
@@ -152,8 +157,8 @@ export default function StaffImportPage() {
             email,
             isActive: true,
             passwordSetupCompleted: false,
-            createdBy: currentUserId,
-            updatedBy: currentUserId,
+            createdBy: user.uid,
+            updatedBy: user.uid,
           }
 
           // 任意フィールド

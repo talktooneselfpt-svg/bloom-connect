@@ -6,9 +6,11 @@ import { createStaffWithAuth } from '@/lib/auth/staff';
 import { JOB_TYPES, POSITIONS, ROLES, EMPLOYMENT_TYPES } from '@/types/staff';
 import { generateStaffEmail } from '@/lib/utils/email';
 import { generateTemporaryPassword } from '@/lib/utils/idGenerator';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function NewStaffPage() {
   const router = useRouter();
+  const { user, organization } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -64,21 +66,24 @@ export default function NewStaffPage() {
         throw new Error('会社用電話番号は必須項目です');
       }
 
+      // 認証情報の確認
+      if (!user?.uid) {
+        throw new Error('ユーザー情報の取得に失敗しました');
+      }
+      if (!organization?.id || !organization?.organizationCode) {
+        throw new Error('組織情報の取得に失敗しました');
+      }
+
       // 一時パスワードを生成
       const tempPassword = generateTemporaryPassword();
       setTemporaryPassword(tempPassword);
 
-      // 仮のデータ（実際にはログインユーザー情報を使用）
-      const currentUserId = 'temp-user-id'; // TODO: 実際のユーザーIDに置き換え
-      const organizationId = 'temp-org-id'; // TODO: 実際の組織IDに置き換え
-      const organizationCode = 'ORG001'; // TODO: 実際の事業所コードに置き換え
-
       // メールアドレスを自動生成
-      const email = generateStaffEmail(formData.staffNumber, organizationCode);
+      const email = generateStaffEmail(formData.staffNumber, organization.organizationCode);
 
       // 任意フィールドの処理（空文字列の場合はプロパティ自体を含めない）
       const staffData: any = {
-        organizationId,
+        organizationId: organization.id,
         staffNumber: formData.staffNumber,
         nameKanji: formData.nameKanji,
         nameKana: formData.nameKana,
@@ -89,8 +94,8 @@ export default function NewStaffPage() {
         email,
         isActive: true,
         passwordSetupCompleted: false, // 初回ログイン時にパスワード設定が必要
-        createdBy: currentUserId,
-        updatedBy: currentUserId,
+        createdBy: user.uid,
+        updatedBy: user.uid,
       }
 
       // 任意フィールドが入力されている場合のみ追加
@@ -167,7 +172,7 @@ export default function NewStaffPage() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <h3 className="text-sm font-semibold text-blue-800 mb-2">ログイン情報</h3>
             <div className="text-sm text-blue-700 space-y-1">
-              <p><span className="font-medium">事業所番号:</span> ORG001</p>
+              <p><span className="font-medium">事業所番号:</span> {organization?.organizationCode}</p>
               <p><span className="font-medium">職員番号:</span> {formData.staffNumber}</p>
               <p><span className="font-medium">氏名:</span> {formData.nameKanji}</p>
             </div>

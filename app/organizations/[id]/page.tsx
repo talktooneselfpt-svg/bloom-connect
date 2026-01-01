@@ -4,10 +4,13 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { getOrganization, deactivateOrganization, reactivateOrganization } from "@/lib/firestore/organizations"
 import { Organization } from "@/types/organization"
+import { useAuth } from "@/contexts/AuthContext"
+
 export default function OrganizationDetailPage() {
   const router = useRouter()
   const params = useParams()
   const organizationId = params.id as string
+  const { user } = useAuth()
 
   const [organization, setOrganization] = useState<Organization | null>(null)
   const [loading, setLoading] = useState(true)
@@ -37,9 +40,13 @@ export default function OrganizationDetailPage() {
     if (!organization) return
     if (!confirm("この事業所を無効化しますか？")) return
 
+    if (!user?.uid) {
+      alert("ユーザー情報の取得に失敗しました")
+      return
+    }
+
     try {
-      // TODO: 実際のユーザーIDに置き換え
-      await deactivateOrganization(organizationId, "temp-user-id")
+      await deactivateOrganization(organizationId, user.uid)
       await loadOrganization()
     } catch (err) {
       alert(err instanceof Error ? err.message : "無効化に失敗しました")
@@ -50,9 +57,13 @@ export default function OrganizationDetailPage() {
     if (!organization) return
     if (!confirm("この事業所を再アクティブ化しますか？")) return
 
+    if (!user?.uid) {
+      alert("ユーザー情報の取得に失敗しました")
+      return
+    }
+
     try {
-      // TODO: 実際のユーザーIDに置き換え
-      await reactivateOrganization(organizationId, "temp-user-id")
+      await reactivateOrganization(organizationId, user.uid)
       await loadOrganization()
     } catch (err) {
       alert(err instanceof Error ? err.message : "再アクティブ化に失敗しました")

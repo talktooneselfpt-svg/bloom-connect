@@ -11,9 +11,11 @@ import {
   SWALLOWING_STATUS
 } from "@/types/client"
 import { calculateAge, isValidBirthDate } from "@/lib/utils/age"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function NewClientPage() {
   const router = useRouter()
+  const { user, organization } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -84,13 +86,17 @@ export default function NewClientPage() {
         throw new Error("嚥下状態は必須項目です")
       }
 
-      // 仮のデータ（実際にはログインユーザー情報を使用）
-      const currentUserId = "temp-user-id" // TODO: 実際のユーザーIDに置き換え
-      const organizationId = "temp-org-id" // TODO: 実際の組織IDに置き換え
+      // 認証情報の確認
+      if (!user?.uid) {
+        throw new Error('ユーザー情報の取得に失敗しました')
+      }
+      if (!organization?.id) {
+        throw new Error('組織情報の取得に失敗しました')
+      }
 
       // 任意フィールドの処理
       const clientData: any = {
-        organizationId,
+        organizationId: organization.id,
         nameKanji: formData.nameKanji,
         nameKana: formData.nameKana,
         birthDate: formData.birthDate,
@@ -102,8 +108,8 @@ export default function NewClientPage() {
         hasFallHistory: formData.hasFallHistory,
         swallowingStatus: formData.swallowingStatus,
         isActive: true,
-        createdBy: currentUserId,
-        updatedBy: currentUserId
+        createdBy: user.uid,
+        updatedBy: user.uid
       }
 
       // 任意フィールドが入力されている場合のみ追加

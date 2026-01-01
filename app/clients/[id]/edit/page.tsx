@@ -5,10 +5,13 @@ import { useRouter, useParams } from "next/navigation"
 import { getClient, updateClient } from "@/lib/firestore/clients"
 import { Client, GENDERS, LIVING_ARRANGEMENTS, CARE_LEVELS, ADL_LEVELS, SWALLOWING_STATUS } from "@/types/client"
 import { calculateAge, isValidBirthDate } from "@/lib/utils/age"
+import { useAuth } from "@/contexts/AuthContext"
+
 export default function EditClientPage() {
   const router = useRouter()
   const params = useParams()
   const clientId = params.id as string
+  const { user } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -125,8 +128,10 @@ export default function EditClientPage() {
         throw new Error("嚥下状態は必須項目です")
       }
 
-      // TODO: 実際のユーザーIDに置き換え
-      const currentUserId = "temp-user-id"
+      // 認証情報の確認
+      if (!user?.uid) {
+        throw new Error('ユーザー情報の取得に失敗しました')
+      }
 
       // 更新データの準備
       const updates: any = {
@@ -177,7 +182,7 @@ export default function EditClientPage() {
         updates.emergencyContactRelation = formData.emergencyContactRelation.trim()
       }
 
-      await updateClient(clientId, updates, currentUserId)
+      await updateClient(clientId, updates, user.uid)
 
       setSuccess(true)
 

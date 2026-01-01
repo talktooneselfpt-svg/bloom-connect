@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation"
 import { getClientsByOrganization } from "@/lib/firestore/clients"
 import { Client, CARE_LEVELS } from "@/types/client"
 import { calculateAge } from "@/lib/utils/age"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function ClientsPage() {
   const router = useRouter()
+  const { organization } = useAuth()
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -18,14 +20,17 @@ export default function ClientsPage() {
   const [filterCareLevel, setFilterCareLevel] = useState<string>("")
 
   useEffect(() => {
-    loadClients()
-  }, [])
+    if (organization?.id) {
+      loadClients()
+    }
+  }, [organization])
 
   const loadClients = async () => {
+    if (!organization?.id) return
+
     try {
       setLoading(true)
-      // TODO: 実際のorganizationIdに置き換え
-      const data = await getClientsByOrganization("temp-org-id")
+      const data = await getClientsByOrganization(organization.id)
       setClients(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : "利用者情報の取得に失敗しました")

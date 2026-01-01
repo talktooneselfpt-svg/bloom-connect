@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation"
 import { createOrganization, isOrganizationCodeAvailable } from "@/lib/firestore/organizations"
 import { ORGANIZATION_TYPES, PREFECTURES } from "@/types/organization"
 import { serverTimestamp } from "firebase/firestore"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function NewOrganizationPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -71,14 +73,16 @@ export default function NewOrganizationPage() {
         throw new Error("利用規約に同意してください")
       }
 
+      // 認証情報の確認
+      if (!user?.uid) {
+        throw new Error('ユーザー情報の取得に失敗しました')
+      }
+
       // 事業所コードの重複チェック
       const isAvailable = await isOrganizationCodeAvailable(formData.organizationCode)
       if (!isAvailable) {
         throw new Error("この事業所番号は既に使用されています")
       }
-
-      // TODO: 実際のユーザーIDに置き換え
-      const currentUserId = "temp-user-id"
 
       // 事業所データの準備
       const organizationData: any = {
@@ -89,8 +93,8 @@ export default function NewOrganizationPage() {
         organizationType: formData.organizationType,
         administratorName: formData.administratorName,
         isActive: true,
-        createdBy: currentUserId,
-        updatedBy: currentUserId
+        createdBy: user.uid,
+        updatedBy: user.uid
       }
 
       // 任意フィールドの処理
@@ -121,7 +125,7 @@ export default function NewOrganizationPage() {
         organizationData.termsAgreement = {
           version: "1.0",
           agreedAt: serverTimestamp(),
-          agreedBy: currentUserId
+          agreedBy: user.uid
         }
       }
 
