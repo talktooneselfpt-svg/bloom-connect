@@ -9,6 +9,15 @@ import type { Organization } from "@/types/organization"
 import type { Staff } from "@/types/staff"
 import type { Client } from "@/types/client"
 
+// 静的エクスポート用の空のgenerateStaticParams
+// 実際のデータはクライアントサイドで動的に取得
+export async function generateStaticParams() {
+  return []
+}
+
+// ビルド時に存在しないパスもクライアントサイドで処理可能にする
+export const dynamicParams = true
+
 export default function OrganizationDetailPage() {
   const params = useParams()
   const router = useRouter()
