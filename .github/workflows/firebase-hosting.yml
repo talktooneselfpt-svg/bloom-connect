@@ -1,9 +1,10 @@
-name: Deploy to Firebase Hosting
+name: Deploy to Firebase Hosting (Development)
 
 on:
   push:
     branches:
-      - claude/staff-data-foundation-72iE4
+      - main
+      - 'claude/**'
 
 jobs:
   build_and_deploy:
@@ -18,24 +19,50 @@ jobs:
           node-version: '20.9.0'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      - name: Debug: show versions and package.json
+      - name: "Debug: show versions and package.json"
         run: |
           node -v
           npm -v
           npx next --version || true
           cat package.json
 
-      - name: Build
+      - name: Build for development
         run: npm run build
-
-      - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: bloom-connect-258b0
         env:
-          FIREBASE_PROJECT_ID: bloom-connect-258b0
+          NEXT_PUBLIC_APP_ENV: development
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: bloom-connect-258b0
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Deploy to Firebase Hosting (Development)
+        run: |
+          echo "Deploying to development site..."
+          echo "Checking Firebase configuration..."
+          cat .firebaserc
+          cat firebase.json
+          echo "Starting deployment..."
+          firebase deploy --only hosting:dev-site --non-interactive --project bloom-connect-258b0
+        continue-on-error: false
+
+      - name: Deployment status
+        if: success()
+        run: echo "Deployment successful! Site URL https://bloom-connect-dev.web.app"
+
+      - name: Deployment failed
+        if: failure()
+        run: |
+          echo "Deployment failed. Please check the logs above for details."
+          exit 1

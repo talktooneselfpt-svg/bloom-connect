@@ -4,10 +4,13 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getStaff, updateStaff } from '@/lib/firestore/staff';
 import { JOB_TYPES, POSITIONS, ROLES, EMPLOYMENT_TYPES, Staff } from '@/types/staff';
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function EditStaffPage() {
   const router = useRouter();
   const params = useParams();
   const staffId = params.id as string;
+  const { user } = useAuth();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -107,7 +110,10 @@ export default function EditStaffPage() {
         throw new Error('有効なメールアドレスを入力してください');
       }
 
-      const currentUserId = 'temp-user-id'; // TODO: 実際のユーザーIDに置き換え
+      // 認証情報の確認
+      if (!user?.uid) {
+        throw new Error('ユーザー情報の取得に失敗しました');
+      }
 
       // 任意フィールドの処理（空文字列の場合はプロパティ自体を含めない）
       const updateData: any = {
@@ -118,7 +124,7 @@ export default function EditStaffPage() {
         role: formData.role,
         phoneCompany: formData.phoneCompany,
         email: formData.email,
-        updatedBy: currentUserId,
+        updatedBy: user.uid,
       };
 
       // 任意フィールドが入力されている場合のみ追加

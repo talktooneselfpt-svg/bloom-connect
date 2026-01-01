@@ -33,4 +33,41 @@ if (typeof window !== 'undefined' || isConfigured) {
   auth = {} as Auth
 }
 
+/**
+ * 環境に応じたコレクション名を取得する
+ * @param baseName ベースとなるコレクション名 (例: 'staff', 'clients')
+ * @returns 環境に応じたコレクション名 (開発環境では 'dev_' プレフィックスが付く)
+ *
+ * 例:
+ * - 開発環境: getCollectionName('staff') → 'dev_staff'
+ * - 本番環境: getCollectionName('staff') → 'staff'
+ */
+export function getCollectionName(baseName: string): string {
+  const env = process.env.NEXT_PUBLIC_APP_ENV || 'production'
+
+  // 開発環境の場合は 'dev_' プレフィックスを追加
+  if (env === 'development') {
+    return `dev_${baseName}`
+  }
+
+  // 本番環境の場合はそのまま
+  return baseName
+}
+
+/**
+ * 現在の環境を判定する
+ * @returns 'development' | 'production'
+ */
+export function getEnvironment(): 'development' | 'production' {
+  return (process.env.NEXT_PUBLIC_APP_ENV as 'development' | 'production') || 'production'
+}
+
+/**
+ * 開発環境かどうかを判定する
+ * @returns 開発環境の場合は true
+ */
+export function isDevelopment(): boolean {
+  return getEnvironment() === 'development'
+}
+
 export { app, db, auth }

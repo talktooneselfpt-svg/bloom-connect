@@ -15,16 +15,14 @@ import {
   serverTimestamp,
   Timestamp
 } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { db, getCollectionName } from "@/lib/firebase"
 import { Client } from "@/types/client"
-
-const CLIENTS_COLLECTION = "clients"
 
 /**
  * 利用者を新規作成
  */
 export async function createClient(clientData: Omit<Client, "id" | "createdAt" | "updatedAt">): Promise<string> {
-  const clientRef = doc(collection(db, CLIENTS_COLLECTION))
+  const clientRef = doc(collection(db, getCollectionName('clients')))
 
   await setDoc(clientRef, {
     ...clientData,
@@ -39,7 +37,7 @@ export async function createClient(clientData: Omit<Client, "id" | "createdAt" |
  * 利用者情報を取得
  */
 export async function getClient(clientId: string): Promise<Client | null> {
-  const clientRef = doc(db, CLIENTS_COLLECTION, clientId)
+  const clientRef = doc(db, getCollectionName('clients'), clientId)
   const clientSnap = await getDoc(clientRef)
 
   if (!clientSnap.exists()) {
@@ -60,7 +58,7 @@ export async function updateClient(
   updates: Partial<Omit<Client, "id" | "createdAt" | "createdBy">>,
   updatedBy: string
 ): Promise<void> {
-  const clientRef = doc(db, CLIENTS_COLLECTION, clientId)
+  const clientRef = doc(db, getCollectionName('clients'), clientId)
 
   await updateDoc(clientRef, {
     ...updates,
@@ -73,7 +71,7 @@ export async function updateClient(
  * すべての利用者を取得
  */
 export async function getAllClients(): Promise<Client[]> {
-  const querySnapshot = await getDocs(collection(db, CLIENTS_COLLECTION))
+  const querySnapshot = await getDocs(collection(db, getCollectionName('clients')))
   return querySnapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
@@ -85,7 +83,7 @@ export async function getAllClients(): Promise<Client[]> {
  */
 export async function getClientsByOrganization(organizationId: string): Promise<Client[]> {
   const q = query(
-    collection(db, CLIENTS_COLLECTION),
+    collection(db, getCollectionName('clients')),
     where("organizationId", "==", organizationId),
     orderBy("nameKana", "asc")
   )
@@ -102,7 +100,7 @@ export async function getClientsByOrganization(organizationId: string): Promise<
  */
 export async function getActiveClients(organizationId: string): Promise<Client[]> {
   const q = query(
-    collection(db, CLIENTS_COLLECTION),
+    collection(db, getCollectionName('clients')),
     where("organizationId", "==", organizationId),
     where("isActive", "==", true),
     orderBy("nameKana", "asc")
@@ -119,7 +117,7 @@ export async function getActiveClients(organizationId: string): Promise<Client[]
  * 利用者を退所処理（論理削除）
  */
 export async function retireClient(clientId: string, retiredBy: string): Promise<void> {
-  const clientRef = doc(db, CLIENTS_COLLECTION, clientId)
+  const clientRef = doc(db, getCollectionName('clients'), clientId)
 
   await updateDoc(clientRef, {
     isActive: false,
@@ -134,7 +132,7 @@ export async function retireClient(clientId: string, retiredBy: string): Promise
  * 利用者を再アクティブ化
  */
 export async function reactivateClient(clientId: string, updatedBy: string): Promise<void> {
-  const clientRef = doc(db, CLIENTS_COLLECTION, clientId)
+  const clientRef = doc(db, getCollectionName('clients'), clientId)
 
   await updateDoc(clientRef, {
     isActive: true,
@@ -153,7 +151,7 @@ export async function getClientsByCareLevel(
   careLevel: string
 ): Promise<Client[]> {
   const q = query(
-    collection(db, CLIENTS_COLLECTION),
+    collection(db, getCollectionName('clients')),
     where("organizationId", "==", organizationId),
     where("careLevel", "==", careLevel),
     where("isActive", "==", true),

@@ -4,9 +4,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getStaffByOrganization, retireStaff } from '@/lib/firestore/staff';
 import { Staff, ROLES } from '@/types/staff';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function StaffListPage() {
   const router = useRouter();
+  const { user, organization } = useAuth();
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,15 +19,17 @@ export default function StaffListPage() {
   const [filterRole, setFilterRole] = useState<string>('all');
 
   useEffect(() => {
-    loadStaffList();
-  }, []);
+    if (organization?.id) {
+      loadStaffList();
+    }
+  }, [organization]);
 
   const loadStaffList = async () => {
+    if (!organization?.id) return;
+
     try {
       setLoading(true);
-      // TODO: 実際の組織IDに置き換え
-      const organizationId = 'temp-org-id';
-      const data = await getStaffByOrganization(organizationId);
+      const data = await getStaffByOrganization(organization.id);
       setStaffList(data);
     } catch (err) {
       setError('職員一覧の取得に失敗しました');
@@ -40,10 +44,14 @@ export default function StaffListPage() {
       return;
     }
 
+    if (!user?.uid) {
+      alert('ユーザー情報の取得に失敗しました');
+      return;
+    }
+
     try {
       const retireDate = new Date().toISOString().split('T')[0];
-      const currentUserId = 'temp-user-id'; // TODO: 実際のユーザーIDに置き換え
-      await retireStaff(staffId, retireDate, currentUserId);
+      await retireStaff(staffId, retireDate, user.uid);
       await loadStaffList();
     } catch (err) {
       alert('退職処理に失敗しました');

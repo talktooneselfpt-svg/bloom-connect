@@ -5,10 +5,13 @@ import { useRouter, useParams } from "next/navigation"
 import { getClient, retireClient, reactivateClient } from "@/lib/firestore/clients"
 import { Client } from "@/types/client"
 import { calculateAge } from "@/lib/utils/age"
+import { useAuth } from "@/contexts/AuthContext"
+
 export default function ClientDetailPage() {
   const router = useRouter()
   const params = useParams()
   const clientId = params.id as string
+  const { user } = useAuth()
 
   const [client, setClient] = useState<Client | null>(null)
   const [loading, setLoading] = useState(true)
@@ -38,9 +41,13 @@ export default function ClientDetailPage() {
     if (!client) return
     if (!confirm("この利用者を退所処理しますか？")) return
 
+    if (!user?.uid) {
+      alert("ユーザー情報の取得に失敗しました")
+      return
+    }
+
     try {
-      // TODO: 実際のユーザーIDに置き換え
-      await retireClient(clientId, "temp-user-id")
+      await retireClient(clientId, user.uid)
       await loadClient()
     } catch (err) {
       alert(err instanceof Error ? err.message : "退所処理に失敗しました")
@@ -51,9 +58,13 @@ export default function ClientDetailPage() {
     if (!client) return
     if (!confirm("この利用者を再アクティブ化しますか？")) return
 
+    if (!user?.uid) {
+      alert("ユーザー情報の取得に失敗しました")
+      return
+    }
+
     try {
-      // TODO: 実際のユーザーIDに置き換え
-      await reactivateClient(clientId, "temp-user-id")
+      await reactivateClient(clientId, user.uid)
       await loadClient()
     } catch (err) {
       alert(err instanceof Error ? err.message : "再アクティブ化に失敗しました")

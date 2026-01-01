@@ -13,23 +13,54 @@ service cloud.firestore {
 
     // ヘルパー関数：管理者かどうか
     function isAdmin() {
-      return isSignedIn() && getUserRole() == 'admin';
+      return isSignedIn() && getUserRole() == '管理者';
     }
 
     // ヘルパー関数：マネージャー以上かどうか
     function isManagerOrAbove() {
-      return isSignedIn() && getUserRole() in ['admin', 'manager'];
+      return isSignedIn() && getUserRole() in ['管理者', 'マネージャー'];
     }
 
     // ヘルパー関数：リーダー以上かどうか
     function isLeaderOrAbove() {
-      return isSignedIn() && getUserRole() in ['admin', 'manager', 'leader'];
+      return isSignedIn() && getUserRole() in ['管理者', 'マネージャー', 'リーダー'];
     }
 
     // ヘルパー関数：自分自身のデータかどうか
     function isOwn(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+
+    // ========================================
+    // 開発環境用コレクション（dev_プレフィックス）
+    // ========================================
+
+    // 開発環境：職員データ（読み取り専用 - テスト用に一時的に許可）
+    match /dev_staff/{staffId} {
+      allow read: if true;  // TODO: 本番前に認証を追加
+      allow write: if isSignedIn();
+    }
+
+    // 開発環境：組織データ（読み取り専用 - テスト用に一時的に許可）
+    match /dev_organizations/{organizationId} {
+      allow read: if true;  // TODO: 本番前に認証を追加
+      allow write: if isSignedIn();
+    }
+
+    // 開発環境：利用者データ（読み取り専用 - テスト用に一時的に許可）
+    match /dev_clients/{clientId} {
+      allow read: if true;  // TODO: 本番前に認証を追加
+      allow write: if isSignedIn();
+    }
+
+    // 開発環境：信頼されたデバイス
+    match /dev_trustedDevices/{deviceId} {
+      allow read, write: if true;  // TODO: 本番前に認証を追加
+    }
+
+    // ========================================
+    // 本番環境用コレクション
+    // ========================================
 
     // 職員データ（staff コレクション）
     match /staff/{staffId} {
