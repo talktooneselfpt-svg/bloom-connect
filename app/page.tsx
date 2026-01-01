@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { db, getCollectionName } from "@/lib/firebase"
+import { db, getCollectionName, isDevelopment } from "@/lib/firebase"
 import { collection, query, where, getCountFromServer } from "firebase/firestore"
 
 export default function DashboardPage() {
@@ -18,6 +18,11 @@ export default function DashboardPage() {
   })
 
   useEffect(() => {
+    // 開発環境では運営管理画面にリダイレクト
+    if (isDevelopment()) {
+      router.push('/admin')
+      return
+    }
     loadDashboardData()
   }, [])
 
