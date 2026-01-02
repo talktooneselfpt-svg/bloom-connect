@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app"
 import { getFirestore, Firestore } from "firebase/firestore"
 import { getAuth, Auth } from "firebase/auth"
+import { getFunctions, Functions, connectFunctionsEmulator } from "firebase/functions"
 
 // ビルド時の環境変数チェック
 const isConfigured =
@@ -20,17 +21,25 @@ const firebaseConfig = {
 let app: FirebaseApp
 let db: Firestore
 let auth: Auth
+let functions: Functions
 
 if (typeof window !== 'undefined' || isConfigured) {
   // クライアントサイドまたは環境変数が設定されている場合
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
   db = getFirestore(app)
   auth = getAuth(app)
+  functions = getFunctions(app, 'asia-northeast1')
+
+  // 開発環境でエミュレータを使用する場合（オプション）
+  if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
+    connectFunctionsEmulator(functions, 'localhost', 5001)
+  }
 } else {
   // ビルド時のダミーオブジェクト（実際には使用されない）
   app = {} as FirebaseApp
   db = {} as Firestore
   auth = {} as Auth
+  functions = {} as Functions
 }
 
-export { app, db, auth }
+export { app, db, auth, functions }

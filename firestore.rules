@@ -1,10 +1,18 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // ========================================
+    // 共通ヘルパー関数
+    // ========================================
+
     // ヘルパー関数：ユーザーが認証済みかどうか
     function isSignedIn() {
       return request.auth != null;
     }
+
+    // ========================================
+    // 運営用システム（既存）のヘルパー関数
+    // ========================================
 
     // ヘルパー関数：ユーザーのロールを取得
     function getUserRole() {
@@ -29,6 +37,36 @@ service cloud.firestore {
     // ヘルパー関数：自分自身のデータかどうか
     function isOwn(userId) {
       return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // ========================================
+    // エンドユーザー向けシステム（新規）のヘルパー関数
+    // Custom Claims ベース（DBアクセス削減）
+    // ========================================
+
+    // SuperAdmin判定（システム全体の管理者）
+    function isSuperAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    // 所属事業所の判定（DBアクセスなし）
+    function isStaffOf(eid) {
+      return isSignedIn() && request.auth.token.eid == eid;
+    }
+
+    // 事業所の管理者権限の判定（DBアクセスなし）
+    function isEstablishmentAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+
+    // プラン判定（Custom Claimsベース）
+    function isPaid() {
+      return isSignedIn() && request.auth.token.plan == 'paid';
+    }
+
+    // パスワード変更済みかチェック
+    function isPasswordChanged() {
+      return request.auth.token.mustChangePassword != true;
     }
 
     // 職員データ（staff コレクション）
@@ -69,6 +107,96 @@ service cloud.firestore {
 
       // 削除：管理者のみ
       allow delete: if isAdmin();
+    }
+
+    // ========================================
+    // エンドユーザー向けコレクション
+    // ========================================
+
+    // 事業所データ（establishments コレクション）
+    match /establishments/{eid} {
+      // 読み取り：SuperAdminまたは所属スタッフ
+      allow read: if isSuperAdmin() || isStaffOf(eid);
+
+      // 更新：SuperAdminまたは事業所の管理者
+      allow update: if isSuperAdmin() || (isEstablishmentAdmin() && isStaffOf(eid));
+
+      // 作成・削除：SuperAdminのみ
+      allow create, delete: if isSuperAdmin();
+    }
+
+    // エンドユーザー（users コレクション）
+    match /users/{uid} {
+      // 読み取り：自分自身、SuperAdmin、または同じ事業所のスタッフ
+      allow read: if request.auth.uid == uid
+                  || isSuperAdmin()
+                  || (isSignedIn() && resource.data.establishmentId == request.auth.token.eid);
+
+      // 作成：初回登録用（自分自身のIDで作成する場合のみ許可）
+      allow create: if request.auth.uid == uid;
+
+      // 更新：自分自身、SuperAdmin、または自事業所の管理者
+      allow update: if request.auth.uid == uid
+                    || isSuperAdmin()
+                    || (isEstablishmentAdmin() && isStaffOf(request.resource.data.establishmentId));
+
+      // 削除：SuperAdminまたは事業所の管理者
+      allow delete: if isSuperAdmin()
+                    || (isEstablishmentAdmin() && isStaffOf(resource.data.establishmentId));
+    }
+
+    // 利用者データ（patients コレクション）- エンドユーザー向け
+    match /patients/{pid} {
+      // 読み取り：SuperAdminまたは同じ事業所のスタッフ
+      // パスワード変更が完了していることが条件
+      allow read: if isPasswordChanged() &&
+                    (isSuperAdmin() ||
+                     (isSignedIn() &&
+                      (resource == null || isStaffOf(resource.data.establishmentId))));
+
+      // 作成・更新：所属事業所が一致し、有料プランであること
+      allow create, update: if isPasswordChanged() &&
+                              (isSuperAdmin() ||
+                               (isStaffOf(request.resource.data.establishmentId) && isPaid()));
+
+      // 削除：SuperAdminまたは事業所の管理者
+      allow delete: if isSuperAdmin() ||
+                      (isEstablishmentAdmin() && isStaffOf(resource.data.establishmentId));
+    }
+
+    // 通知データ（notifications コレクション）
+    match /notifications/{notificationId} {
+      // 読み取り：自分宛ての通知またはSuperAdmin
+      allow read: if isSignedIn() &&
+                    (resource.data.targetUid == request.auth.uid ||
+                     resource.data.targetEstablishmentId == request.auth.token.eid ||
+                     isSuperAdmin());
+
+      // 作成：管理者またはSuperAdmin
+      allow create: if isEstablishmentAdmin() || isSuperAdmin();
+
+      // 更新：自分宛ての通知（既読フラグなど）またはSuperAdmin
+      allow update: if (resource.data.targetUid == request.auth.uid) || isSuperAdmin();
+
+      // 削除：SuperAdminのみ
+      allow delete: if isSuperAdmin();
+    }
+
+    // コミュニティ投稿（community コレクション）
+    match /community/{postId} {
+      // 読み取り：全ての認証済みユーザー
+      allow read: if isSignedIn() && isPasswordChanged();
+
+      // 作成：全ての認証済みユーザー（投稿者情報を含む）
+      allow create: if isSignedIn() &&
+                      isPasswordChanged() &&
+                      request.resource.data.authorUid == request.auth.uid;
+
+      // 更新：投稿者本人またはSuperAdmin
+      allow update: if (resource.data.authorUid == request.auth.uid) || isSuperAdmin();
+
+      // 削除：投稿者本人またはSuperAdmin
+      allow delete: if (resource.data.authorUid == request.auth.uid) || isSuperAdmin();
     }
   }
 }
