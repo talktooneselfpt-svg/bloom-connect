@@ -34,13 +34,22 @@ export default function ForceChangePasswordPage() {
     setLoading(true);
 
     try {
+      // 現在のユーザー情報を保存（サインアウト後に使用）
+      const currentUser = auth.currentUser;
+      if (!currentUser || !currentUser.email) {
+        throw new Error("ユーザー情報が取得できません");
+      }
+
       // Cloud Functions: パスワード更新とClaimsのフラグ除去を行う関数
       const changeInitialPassword = httpsCallable(functions, "changeInitialPassword");
-
       await changeInitialPassword({ newPassword });
 
-      // トークンを強制リフレッシュして、フロントのClaims情報を最新化する
-      await auth.currentUser?.getIdToken(true);
+      // パスワード変更後、既存のトークンは無効になるため一度サインアウト
+      await auth.signOut();
+
+      // 新しいパスワードで自動再ログイン
+      const { signInWithEmailAndPassword } = await import("firebase/auth");
+      await signInWithEmailAndPassword(auth, currentUser.email, newPassword);
 
       // 成功メッセージを表示してからホームへリダイレクト
       alert("パスワードが正常に変更されました。ホーム画面に移動します。");
