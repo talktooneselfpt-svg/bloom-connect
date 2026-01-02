@@ -3,7 +3,8 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - claude/staff-data-foundation-72iE4
+      - claude/healthcare-pwa-development-WOqKG
+      - main
 
 jobs:
   build_and_deploy:
@@ -19,13 +20,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Debug: show versions and package.json
-        run: |
-          node -v
-          npm -v
-          npx next --version || true
-          cat package.json
 
       - name: Build
         run: npm run build
