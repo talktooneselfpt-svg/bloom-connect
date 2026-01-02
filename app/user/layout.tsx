@@ -74,8 +74,9 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     }
   };
 
-  // ログイン画面と強制変更画面ではサイドバーを表示しない
-  if (pathname === "/user/login" || pathname === "/user/force-change-password") {
+  // ログイン画面と強制変更画面ではサイドバーを表示しない（末尾スラッシュを正規化）
+  const normalizedPath = pathname.replace(/\/$/, '');
+  if (normalizedPath === "/user/login" || normalizedPath === "/user/force-change-password") {
     return <AuthGuard>{children}</AuthGuard>;
   }
 

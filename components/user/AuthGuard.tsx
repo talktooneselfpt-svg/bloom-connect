@@ -18,9 +18,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // 末尾スラッシュを正規化
+      const normalizedPath = pathname.replace(/\/$/, '');
+
       if (!user) {
         // 未ログイン時はログイン画面へ
-        if (pathname !== "/user/login") {
+        if (normalizedPath !== "/user/login") {
           router.push("/user/login");
         }
         setAuthenticated(false);
@@ -35,12 +38,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
         if (mustChange) {
           // 強制変更フラグが立っている場合
-          if (pathname !== "/user/force-change-password") {
+          if (normalizedPath !== "/user/force-change-password") {
             router.push("/user/force-change-password");
           }
         } else {
           // 正常なユーザーが変更画面に迷い込んだらホームへ戻す
-          if (pathname === "/user/force-change-password") {
+          if (normalizedPath === "/user/force-change-password") {
             router.push("/user/home");
           }
         }
@@ -67,8 +70,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // ログインページと強制変更ページは認証不要
-  if (pathname === "/user/login" || pathname === "/user/force-change-password") {
+  // ログインページと強制変更ページは認証不要（末尾スラッシュを正規化）
+  const normalizedPath = pathname.replace(/\/$/, '');
+  if (normalizedPath === "/user/login" || normalizedPath === "/user/force-change-password") {
     return <>{children}</>;
   }
 
