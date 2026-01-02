@@ -96,7 +96,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-gray-800">Bloom Connect</span>
+                <span className="font-bold text-gray-800">ブルームコネクト</span>
               </div>
             )}
             <button
