@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
 import {
   getUserNotifications,
   markAsRead,
@@ -15,22 +16,23 @@ import {
 
 export default function NotificationsPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
   const [activeTab, setActiveTab] = useState<"all" | "unread" | "read">("all")
   const [selectedCategory, setSelectedCategory] = useState<NotificationCategory | "">("")
 
-  // TODO: 実際のユーザーIDと事業所IDを取得
-  const userId = "temp-user-id"
-  const organizationId = "temp-org-id"
-
   useEffect(() => {
-    loadNotifications()
-    loadUnreadCount()
-  }, [activeTab, selectedCategory])
+    if (user) {
+      loadNotifications()
+      loadUnreadCount()
+    }
+  }, [activeTab, selectedCategory, user])
 
   const loadNotifications = async () => {
+    if (!user) return
+
     try {
       setLoading(true)
 
@@ -45,8 +47,8 @@ export default function NotificationsPage() {
       }
 
       const { notifications: data } = await getUserNotifications(
-        userId,
-        organizationId,
+        user.uid,
+        user.customClaims?.eid || "",
         filter,
         50
       )
@@ -60,8 +62,10 @@ export default function NotificationsPage() {
   }
 
   const loadUnreadCount = async () => {
+    if (!user) return
+
     try {
-      const count = await getUnreadCount(userId, organizationId)
+      const count = await getUnreadCount(user.uid, user.customClaims?.eid || "")
       setUnreadCount(count)
     } catch (err) {
       console.error("未読数の取得に失敗しました:", err)
@@ -79,10 +83,10 @@ export default function NotificationsPage() {
   }
 
   const handleMarkAllAsRead = async () => {
-    if (!confirm("すべての通知を既読にしますか？")) return
+    if (!user || !confirm("すべての通知を既読にしますか？")) return
 
     try {
-      await markAllAsRead(userId, organizationId)
+      await markAllAsRead(user.uid, user.customClaims?.eid || "")
       await loadNotifications()
       await loadUnreadCount()
     } catch (err) {
