@@ -70,5 +70,38 @@ service cloud.firestore {
       // 削除：管理者のみ
       allow delete: if isAdmin();
     }
+
+    // 通知データ（notifications コレクション）
+    match /notifications/{notificationId} {
+      // ヘルパー関数：この通知が自分宛かどうか
+      function isTargetUser() {
+        let data = resource.data;
+        return data.type == 'personal' && data.targetUserId == request.auth.uid;
+      }
+
+      // ヘルパー関数：この通知が自分の事業所宛かどうか（実装時に事業所IDを取得する必要あり）
+      function isTargetOrganization() {
+        let data = resource.data;
+        // TODO: ユーザーの事業所IDを取得して比較
+        return data.type == 'organization';
+      }
+
+      // ヘルパー関数：この通知が全体通知かどうか
+      function isGlobal() {
+        return resource.data.type == 'global';
+      }
+
+      // 読み取り：自分宛の通知（個人 + 事業所 + 全体）
+      allow read: if isSignedIn() && (isTargetUser() || isTargetOrganization() || isGlobal());
+
+      // 作成：管理者のみ
+      allow create: if isAdmin();
+
+      // 更新：自分宛の通知のみ（既読マーク用）
+      allow update: if isSignedIn() && (isTargetUser() || isTargetOrganization() || isGlobal());
+
+      // 削除：管理者のみ
+      allow delete: if isAdmin();
+    }
   }
 }
