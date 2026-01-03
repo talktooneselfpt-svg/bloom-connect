@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import {
   Clock,
@@ -12,16 +13,33 @@ import {
   AlertCircle,
   CheckCircle2,
   Star,
+  Settings,
+  FileText,
+  Loader2,
 } from "lucide-react";
 
 export default function UserHomePage() {
+  const router = useRouter();
   const [userName, setUserName] = useState("");
+  const [userRole, setUserRole] = useState<"admin" | "staff">("staff");
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setUserName(user.displayName || "ゲスト");
+
+        // Custom Claimsからロールを取得
+        const tokenResult = await user.getIdTokenResult();
+        const role = tokenResult.claims.role as "admin" | "staff" | undefined;
+        if (role) {
+          setUserRole(role);
+        }
+        setIsLoading(false);
+      } else {
+        // 未認証の場合はログイン画面へ
+        router.push("/user/login");
       }
     });
 
@@ -34,7 +52,7 @@ export default function UserHomePage() {
       unsubscribe();
       clearInterval(timer);
     };
-  }, []);
+  }, [router]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("ja-JP", {
@@ -54,25 +72,46 @@ export default function UserHomePage() {
 
   // サンプルデータ（今後実装するアプリの使用履歴から取得）
   const frequentApps = [
-    { id: 1, name: "ヒヤリハット", icon: AlertCircle, color: "bg-orange-100 text-orange-600" },
-    { id: 2, name: "シフト管理", icon: Calendar, color: "bg-blue-100 text-blue-600" },
-    { id: 3, name: "利用者記録", icon: Users, color: "bg-green-100 text-green-600" },
+    { id: 1, name: "ヒヤリハット", icon: AlertCircle, color: "bg-orange-100 text-orange-600", path: "/user/apps/incident-report" },
+    { id: 2, name: "シフト管理", icon: Calendar, color: "bg-blue-100 text-blue-600", path: "/user/apps/shift" },
+    { id: 3, name: "利用者記録", icon: Users, color: "bg-green-100 text-green-600", path: "/user/settings/patients" },
   ];
 
   const recentNotifications = [
-    { id: 1, title: "新しいスタッフが追加されました", time: "2時間前", type: "info" },
-    { id: 2, title: "今月のシフトが確定しました", time: "5時間前", type: "success" },
-    { id: 3, title: "システムメンテナンスのお知らせ", time: "1日前", type: "warning" },
+    { id: 1, title: "新しいスタッフが追加されました", time: "2時間前", type: "info" as const },
+    { id: 2, title: "今月のシフトが確定しました", time: "5時間前", type: "success" as const },
+    { id: 3, title: "システムメンテナンスのお知らせ", time: "1日前", type: "warning" as const },
   ];
 
   const monthlyUpdate = {
     title: "2026年1月のアップデート",
     items: [
-      "利用者管理機能の無限スクロール対応",
-      "コミュニティ機能にリアクション追加",
-      "通知の既読管理機能を実装",
+      "スタッフ管理機能の完全実装",
+      "入力フィールドの文字色を黒に統一",
+      "Service Worker削除スクリプト追加",
     ],
   };
+
+  const quickActions = userRole === "admin"
+    ? [
+        { label: "スタッフ管理", path: "/user/settings/staff", color: "bg-blue-50 text-blue-700 hover:bg-blue-100" },
+        { label: "利用者管理", path: "/user/settings/patients", color: "bg-green-50 text-green-700 hover:bg-green-100" },
+        { label: "施設設定", path: "/user/settings/establishment", color: "bg-purple-50 text-purple-700 hover:bg-purple-100" },
+      ]
+    : [
+        { label: "利用者記録を見る", path: "/user/settings/patients", color: "bg-green-50 text-green-700 hover:bg-green-100" },
+        { label: "今日のシフトを確認", path: "/user/apps/shift", color: "bg-blue-50 text-blue-700 hover:bg-blue-100" },
+        { label: "コミュニティに投稿", path: "/user/community", color: "bg-purple-50 text-purple-700 hover:bg-purple-100" },
+      ];
+
+  if (isLoading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
+        <p className="text-sm text-gray-600">読み込み中...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -108,6 +147,7 @@ export default function UserHomePage() {
                 {frequentApps.map((app) => (
                   <button
                     key={app.id}
+                    onClick={() => router.push(app.path)}
                     className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition"
                   >
                     <div className={`w-12 h-12 rounded-full ${app.color} flex items-center justify-center mb-2`}>
@@ -201,15 +241,22 @@ export default function UserHomePage() {
                 <h2 className="text-lg font-bold text-gray-800">クイックアクション</h2>
               </div>
               <div className="space-y-2">
-                <button className="w-full px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm font-medium text-left">
-                  新規利用者を登録
-                </button>
-                <button className="w-full px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition text-sm font-medium text-left">
-                  今日のシフトを確認
-                </button>
-                <button className="w-full px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition text-sm font-medium text-left">
-                  コミュニティに投稿
-                </button>
+                {quickActions.map((action, index) => (
+                  <button
+                    key={index}
+                    onClick={() => router.push(action.path)}
+                    className={`w-full px-4 py-2 ${action.color} rounded-lg transition text-sm font-medium text-left`}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-xs text-gray-500">
+                  {userRole === "admin"
+                    ? "管理者として、施設全体の設定や管理が可能です"
+                    : "各機能へのクイックアクセスができます"}
+                </p>
               </div>
             </div>
           </div>
