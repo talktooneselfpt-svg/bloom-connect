@@ -98,7 +98,7 @@ export default function ForceChangePasswordPage() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type={showPassword ? "text" : "password"}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none text-base"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none text-base text-gray-900"
                 placeholder="8文字以上の英数字"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -124,7 +124,7 @@ export default function ForceChangePasswordPage() {
               <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type={showConfirmPassword ? "text" : "password"}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none text-base"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none text-base text-gray-900"
                 placeholder="もう一度入力"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

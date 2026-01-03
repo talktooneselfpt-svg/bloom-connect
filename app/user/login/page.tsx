@@ -96,7 +96,7 @@ export default function UserLoginPage() {
                   maxLength={6}
                   value={eid}
                   onChange={(e) => setEid(e.target.value.replace(/\D/g, ""))}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-base"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-base text-gray-900"
                   placeholder="100001"
                   required
                 />
@@ -115,7 +115,7 @@ export default function UserLoginPage() {
                   maxLength={5}
                   value={staffId}
                   onChange={(e) => setStaffId(e.target.value.toLowerCase())}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-base"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-base text-gray-900"
                   placeholder="a1b2c"
                   required
                 />
@@ -133,7 +133,7 @@ export default function UserLoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-base"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-base text-gray-900"
                   placeholder="••••••••"
                   required
                 />

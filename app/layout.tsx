@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import ConditionalLayout from "./ConditionalLayout";
 
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script src="/sw-unregister.js" strategy="afterInteractive" />
         <ConditionalLayout>{children}</ConditionalLayout>
       </body>
     </html>
