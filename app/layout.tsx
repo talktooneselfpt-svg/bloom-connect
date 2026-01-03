@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import GlobalErrorHandler from "@/components/GlobalErrorHandler";
 
 // ナビゲーションを動的にインポート（初期ロードを高速化）
 const Navigation = dynamic(() => import("@/components/Navigation"), {
@@ -49,13 +51,16 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ServiceWorkerRegistration />
+        <GlobalErrorHandler />
         <PWAInstallPrompt />
-        <AuthProvider>
-          <Navigation />
-          <div className="lg:ml-64">
-            {children}
-          </div>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <Navigation />
+            <div className="lg:ml-64">
+              {children}
+            </div>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
