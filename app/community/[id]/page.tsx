@@ -96,7 +96,6 @@ export default function PostDetailPage() {
         content: commentContent.trim(),
         authorId: user.uid,
         authorName: user.displayName || "匿名ユーザー",
-        organizationId: post.organizationId,
       })
       setCommentContent("")
       await loadPostAndComments()

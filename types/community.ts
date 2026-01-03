@@ -118,35 +118,41 @@ export interface PostFilter {
 /**
  * カテゴリ情報
  */
-export const POST_CATEGORIES: Record<PostCategory, { label: string; icon: string; color: string }> = {
+export const POST_CATEGORIES: Record<PostCategory, { label: string; icon: string; bgColor: string; textColor: string }> = {
   general: {
     label: '一般',
     icon: '💬',
-    color: 'bg-gray-100 text-gray-700',
+    bgColor: 'bg-gray-100',
+    textColor: 'text-gray-700',
   },
   qa: {
     label: '質問・回答',
     icon: '❓',
-    color: 'bg-blue-100 text-blue-700',
+    bgColor: 'bg-blue-100',
+    textColor: 'text-blue-700',
   },
   tips: {
     label: 'ノウハウ',
     icon: '💡',
-    color: 'bg-yellow-100 text-yellow-700',
+    bgColor: 'bg-yellow-100',
+    textColor: 'text-yellow-700',
   },
   news: {
     label: 'ニュース',
     icon: '📰',
-    color: 'bg-purple-100 text-purple-700',
+    bgColor: 'bg-purple-100',
+    textColor: 'text-purple-700',
   },
   event: {
     label: 'イベント',
     icon: '📅',
-    color: 'bg-green-100 text-green-700',
+    bgColor: 'bg-green-100',
+    textColor: 'text-green-700',
   },
   discussion: {
     label: '議論・相談',
     icon: '🗣️',
-    color: 'bg-orange-100 text-orange-700',
+    bgColor: 'bg-orange-100',
+    textColor: 'text-orange-700',
   },
 }
