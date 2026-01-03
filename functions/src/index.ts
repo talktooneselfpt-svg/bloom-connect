@@ -235,3 +235,73 @@ export const changeInitialPassword = onCall(async (request) => {
     throw new HttpsError("internal", "パスワード変更に失敗しました");
   }
 });
+
+// ========================================
+// Cloud Function 4: PINログイン
+// ========================================
+
+import { createHash } from "crypto";
+
+// PINをハッシュ化（SHA-256）
+function hashPin(pin: string): string {
+  return createHash("sha256").update(pin).digest("hex");
+}
+
+interface LoginWithPinData {
+  deviceId: string;
+  pin: string;
+}
+
+export const loginWithPinAuth = onCall(async (request) => {
+  const { deviceId, pin } = request.data as LoginWithPinData;
+
+  if (!deviceId || !pin) {
+    throw new HttpsError("invalid-argument", "デバイスIDとPINが必要です");
+  }
+
+  // PIN検証（4〜6桁の数字）
+  if (!/^\d{4,6}$/.test(pin)) {
+    throw new HttpsError("invalid-argument", "PINは4〜6桁の数字で入力してください");
+  }
+
+  try {
+    // 信頼できるデバイスを取得
+    const deviceRef = db.collection("trustedDevices").doc(deviceId);
+    const deviceSnap = await deviceRef.get();
+
+    if (!deviceSnap.exists) {
+      throw new HttpsError("not-found", "このデバイスは登録されていません");
+    }
+
+    const deviceData = deviceSnap.data();
+    if (!deviceData) {
+      throw new HttpsError("not-found", "デバイス情報が見つかりません");
+    }
+
+    // PINハッシュを検証
+    const inputPinHash = hashPin(pin);
+    if (inputPinHash !== deviceData.pinHash) {
+      throw new HttpsError("permission-denied", "PINが間違っています");
+    }
+
+    // 最終使用日時を更新
+    await deviceRef.update({
+      lastUsedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Custom tokenを生成
+    const customToken = await admin.auth().createCustomToken(deviceData.uid);
+
+    return {
+      success: true,
+      customToken,
+      uid: deviceData.uid,
+    };
+  } catch (error: any) {
+    console.error("PINログインエラー:", error);
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError("internal", "PINログインに失敗しました");
+  }
+});

@@ -198,5 +198,22 @@ service cloud.firestore {
       // 削除：投稿者本人またはSuperAdmin
       allow delete: if (resource.data.authorUid == request.auth.uid) || isSuperAdmin();
     }
+
+    // 信頼できるデバイス（trustedDevices コレクション）
+    match /trustedDevices/{deviceId} {
+      // 読み取り：自分のデバイスのみ
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+
+      // 作成：自分のデバイスのみ（初回登録時）
+      allow create: if isSignedIn() &&
+                      request.resource.data.uid == request.auth.uid &&
+                      request.resource.data.establishmentId == request.auth.token.eid;
+
+      // 更新：自分のデバイスのみ（最終使用日時の更新など）
+      allow update: if isSignedIn() && resource.data.uid == request.auth.uid;
+
+      // 削除：自分のデバイスまたはSuperAdmin
+      allow delete: if (isSignedIn() && resource.data.uid == request.auth.uid) || isSuperAdmin();
+    }
   }
 }
