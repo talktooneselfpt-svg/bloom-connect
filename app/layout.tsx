@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import dynamic from "next/dynamic";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 // ナビゲーションを動的にインポート（初期ロードを高速化）
 const Navigation = dynamic(() => import("@/components/Navigation"), {
@@ -46,6 +48,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <ServiceWorkerRegistration />
+        <PWAInstallPrompt />
         <AuthProvider>
           <Navigation />
           <div className="lg:ml-64">
