@@ -79,3 +79,80 @@ export async function deleteOrganizationLogo(
     // 削除失敗は致命的ではないのでエラーをスローしない
   }
 }
+
+/**
+ * コミュニティ投稿の画像をアップロードする
+ * @param files - アップロードする画像ファイルの配列
+ * @returns アップロードされた画像のURL配列
+ */
+export async function uploadPostImages(files: File[]): Promise<string[]> {
+  // ファイルタイプのバリデーション
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+  for (const file of files) {
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error("画像ファイルはJPEG、PNG、またはWebP形式のみアップロード可能です")
+    }
+  }
+
+  // ファイルサイズのバリデーション（各5MB以下）
+  const maxSize = 5 * 1024 * 1024 // 5MB
+  for (const file of files) {
+    if (file.size > maxSize) {
+      throw new Error("各画像ファイルは5MB以下にしてください")
+    }
+  }
+
+  try {
+    const uploadPromises = files.map(async (file) => {
+      // ユニークなファイル名を生成
+      const timestamp = Date.now()
+      const randomStr = Math.random().toString(36).substring(2, 9)
+      const extension = file.name.split(".").pop()
+      const fileName = `${timestamp}-${randomStr}.${extension}`
+
+      // Storage参照を作成
+      const storageRef = ref(storage, `posts/${fileName}`)
+
+      // ファイルをアップロード
+      const snapshot = await uploadBytes(storageRef, file, {
+        contentType: file.type,
+        customMetadata: {
+          uploadedAt: new Date().toISOString(),
+        },
+      })
+
+      // ダウンロードURLを取得
+      const downloadURL = await getDownloadURL(snapshot.ref)
+      return downloadURL
+    })
+
+    const urls = await Promise.all(uploadPromises)
+    return urls
+  } catch (error) {
+    console.error("画像のアップロードに失敗しました:", error)
+    throw new Error("画像のアップロードに失敗しました。もう一度お試しください。")
+  }
+}
+
+/**
+ * 投稿画像を削除する
+ * @param imageUrl - 削除する画像のURL
+ */
+export async function deletePostImage(imageUrl: string): Promise<void> {
+  try {
+    // URLからファイル名を抽出
+    const fileName = imageUrl.split("/").pop()?.split("?")[0]
+    if (!fileName) {
+      throw new Error("無効な画像URLです")
+    }
+
+    // Storage参照を作成
+    const storageRef = ref(storage, `posts/${decodeURIComponent(fileName)}`)
+
+    // ファイルを削除
+    await deleteObject(storageRef)
+  } catch (error) {
+    console.error("画像の削除に失敗しました:", error)
+    // 削除失敗は致命的ではないのでエラーをスローしない
+  }
+}

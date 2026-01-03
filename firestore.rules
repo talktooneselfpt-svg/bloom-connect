@@ -103,5 +103,47 @@ service cloud.firestore {
       // 削除：管理者のみ
       allow delete: if isAdmin();
     }
+
+    // コミュニティ投稿データ（posts コレクション）
+    match /posts/{postId} {
+      // ヘルパー関数：投稿の作成者かどうか
+      function isPostAuthor() {
+        return isSignedIn() && resource.data.authorId == request.auth.uid;
+      }
+
+      // 読み取り：認証済みユーザーのみ（アーカイブされていない投稿）
+      allow read: if isSignedIn();
+
+      // 作成：認証済みユーザーのみ
+      allow create: if isSignedIn() &&
+                       request.resource.data.authorId == request.auth.uid;
+
+      // 更新：投稿の作成者のみ、または管理者（ピン留め・アーカイブ）
+      allow update: if isPostAuthor() || isAdmin();
+
+      // 削除：投稿の作成者または管理者のみ
+      allow delete: if isPostAuthor() || isAdmin();
+    }
+
+    // コメントデータ（comments コレクション）
+    match /comments/{commentId} {
+      // ヘルパー関数：コメントの作成者かどうか
+      function isCommentAuthor() {
+        return isSignedIn() && resource.data.authorId == request.auth.uid;
+      }
+
+      // 読み取り：認証済みユーザーのみ
+      allow read: if isSignedIn();
+
+      // 作成：認証済みユーザーのみ
+      allow create: if isSignedIn() &&
+                       request.resource.data.authorId == request.auth.uid;
+
+      // 更新：コメントの作成者のみ
+      allow update: if isCommentAuthor();
+
+      // 削除：コメントの作成者または管理者のみ
+      allow delete: if isCommentAuthor() || isAdmin();
+    }
   }
 }
