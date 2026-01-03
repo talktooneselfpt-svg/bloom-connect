@@ -133,9 +133,9 @@ export function setupGlobalErrorHandlers() {
  * @param error - エラーオブジェクト
  * @param errorInfo - Reactのエラー情報
  */
-export function logReactError(error: Error, errorInfo: { componentStack: string }) {
+export function logReactError(error: Error, errorInfo: { componentStack?: string | null }) {
   logError(error, {
-    componentStack: errorInfo.componentStack,
+    componentStack: errorInfo.componentStack || undefined,
     framework: 'React',
   })
 }
