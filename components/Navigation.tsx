@@ -94,8 +94,7 @@ export default function Navigation() {
       >
         {/* ヘッダー */}
         <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">Bloom Connect</h1>
-          <p className="text-xs text-gray-600 mt-1">スタッフ管理システム</p>
+          <h1 className="text-xl font-bold text-gray-900">ブルームコネクト</h1>
         </div>
 
         {/* ナビゲーション項目 */}

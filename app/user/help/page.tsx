@@ -9,7 +9,7 @@ export default function HelpPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">ヘルプ</h1>
           <p className="text-gray-600">
-            Bloom Connectの使い方や機能について確認できます。
+            ブルームコネクトの使い方や機能について確認できます。
           </p>
         </div>
 

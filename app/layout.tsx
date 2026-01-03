@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ブルームコネクト - スタッフ管理システム",
-  description: "介護・医療施設向けスタッフ管理システム",
+  title: "ブルームコネクト",
+  description: "ブルームコネクト",
   manifest: "/manifest.json",
   themeColor: "#2563eb",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",

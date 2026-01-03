@@ -9,7 +9,7 @@ export default function TermsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">利用規約</h1>
           <p className="text-gray-600">
-            Bloom Connectをご利用いただくための規約です。
+            ブルームコネクトをご利用いただくための規約です。
           </p>
         </div>
 
@@ -23,7 +23,7 @@ export default function TermsPage() {
             <h3 className="text-lg font-bold text-gray-800 mb-2">第1条（目的）</h3>
             <p className="text-sm text-gray-600 mb-4">
               本規約は、株式会社Bright Bloom（以下「当社」といいます。）が提供する
-              Bloom Connect（以下「本サービス」といいます。）の利用条件を定めるものです。
+              ブルームコネクト（以下「本サービス」といいます。）の利用条件を定めるものです。
             </p>
 
             <h3 className="text-lg font-bold text-gray-800 mb-2">第2条（適用）</h3>

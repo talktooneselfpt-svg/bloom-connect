@@ -68,8 +68,7 @@ export default function UserLoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
             <Building2 className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800">Bloom Connect</h1>
-          <p className="text-sm text-gray-500 mt-2">医療・介護・福祉事業所向けPWA</p>
+          <h1 className="text-3xl font-bold text-gray-800">ブルームコネクト</h1>
         </div>
 
         {/* ログインカード */}

@@ -1,7 +1,7 @@
 {
-  "name": "ブルームコネクト - スタッフ管理システム",
+  "name": "ブルームコネクト",
   "short_name": "ブルームコネクト",
-  "description": "介護・医療施設向けスタッフ管理システム",
+  "description": "ブルームコネクト",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
